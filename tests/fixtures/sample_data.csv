@@ -1,0 +1,7 @@
+customer_id,last_login_days,support_tickets_90d,spent_30d,segment
+1,2,0,120.5,SMB
+2,45,3,,SMB
+3,10,1,55.2,ENT
+4,90,4,0.0,SMB
+4,90,4,0.0,SMB
+5,7,0,220.0,ENT

@@ -1,0 +1,21 @@
+{
+  "artifact_id": "5125acc6-0572-430c-a71b-c99949331b45",
+  "artifact_type": "InterpretationPackage",
+  "schema_version": "2.3.1",
+  "created_at": "2026-01-20T17:37:23.973313Z",
+  "fingerprint_id": "5125acc6-0572-430c-a71b-c99949331b45",
+  "explanations": {
+    "execution_summary": {
+      "text": "Execution validation completed. PROJECT smoke tests returncode=0 (87ms). Compliance status: ok.",
+      "confidence": "HIGH"
+    },
+    "risk_notes": {
+      "text": "Risks are provisional at this stage. If tests fail or runtimes spike, treat results as CONDITIONAL and address pipeline reliability before delivery.",
+      "confidence": "MEDIUM"
+    }
+  },
+  "audience_versions": {
+    "executive": "Ops check: PASS. Smoke tests passed.",
+    "technical": "pytest_returncode=0, pytest_duration_ms=87, compliance_status=ok. See ExecutionOpsScorecard.runtime_metrics for stdout/stderr excerpts."
+  }
+}

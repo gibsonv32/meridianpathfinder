@@ -1,0 +1,107 @@
+{
+  "artifact_id": "140904c0-f0f8-48a3-bc4e-bf4dfb715f8e",
+  "artifact_type": "Mode0GatePacket",
+  "schema_version": "2.3.1",
+  "created_at": "2026-01-20T16:56:14.304889Z",
+  "fingerprint_id": "140904c0-f0f8-48a3-bc4e-bf4dfb715f8e",
+  "dataset_fingerprint": {
+    "n_rows": 6,
+    "n_cols": 5,
+    "column_types": {
+      "customer_id": "int64",
+      "last_login_days": "int64",
+      "support_tickets_90d": "int64",
+      "spent_30d": "float64",
+      "segment": "object"
+    },
+    "memory_usage_mb": 0.000606536865234375,
+    "file_hash": "5e6bfa393c671740b0102168c8c7d0143e0c13d2b14f79331d6be0e96169f7f2"
+  },
+  "quality_assessment": {
+    "missing_pct": {
+      "customer_id": 0.0,
+      "last_login_days": 0.0,
+      "support_tickets_90d": 0.0,
+      "spent_30d": 0.16666666666666666,
+      "segment": 0.0
+    },
+    "duplicate_rows": 1,
+    "constant_columns": [],
+    "high_cardinality_columns": [],
+    "outlier_columns": []
+  },
+  "distribution_summary": {
+    "customer_id": {
+      "stats": {
+        "count": 6,
+        "mean": 3.1666666666666665,
+        "std": 1.4719601443879744,
+        "min": 1.0,
+        "q25": 2.25,
+        "median": 3.5,
+        "q75": 4.0,
+        "max": 5.0,
+        "skew": -0.41807152029954264,
+        "kurtosis": -0.8591715976331349
+      }
+    },
+    "last_login_days": {
+      "stats": {
+        "count": 6,
+        "mean": 40.666666666666664,
+        "std": 41.122580982553444,
+        "min": 2.0,
+        "q25": 7.75,
+        "median": 27.5,
+        "q75": 78.75,
+        "max": 90.0,
+        "skew": 0.4978509620077249,
+        "kurtosis": -2.271978679968826
+      }
+    },
+    "support_tickets_90d": {
+      "stats": {
+        "count": 6,
+        "mean": 2.0,
+        "std": 1.8973665961010275,
+        "min": 0.0,
+        "q25": 0.25,
+        "median": 2.0,
+        "q75": 3.75,
+        "max": 4.0,
+        "skew": 0.0,
+        "kurtosis": -2.685185185185185
+      }
+    },
+    "spent_30d": {
+      "stats": {
+        "count": 5,
+        "mean": 79.14,
+        "std": 93.07469043730417,
+        "min": 0.0,
+        "q25": 0.0,
+        "median": 55.2,
+        "q75": 120.5,
+        "max": 220.0,
+        "skew": 0.9614852735587064,
+        "kurtosis": -0.08158033873352988
+      }
+    },
+    "segment": {
+      "stats": {
+        "unique_count": 2,
+        "top_values": {
+          "SMB": 4,
+          "ENT": 2
+        }
+      }
+    }
+  },
+  "risks": [
+    {
+      "severity": "MEDIUM",
+      "description": "Dataset contains 1 duplicate rows.",
+      "mitigation": "Deduplicate by stable keys or investigate upstream joins."
+    }
+  ]
+}

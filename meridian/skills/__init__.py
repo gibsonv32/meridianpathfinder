@@ -1,0 +1,2 @@
+"""Skill file integration (stub)."""
+

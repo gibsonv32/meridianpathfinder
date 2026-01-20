@@ -1,0 +1,40 @@
+{
+  "artifact_id": "ecce75a9-6197-428d-880e-a78c4983da10",
+  "artifact_type": "DeliveryManifest",
+  "schema_version": "2.3.1",
+  "created_at": "2026-01-20T17:45:29.441464Z",
+  "fingerprint_id": "ecce75a9-6197-428d-880e-a78c4983da10",
+  "outputs": [
+    {
+      "name": "ExecutiveSummary.md",
+      "path": "/Users/vincentgibson/dev/meridianpathfinder/.meridian/deliverables/ExecutiveSummary.md"
+    },
+    {
+      "name": "TechnicalReport.md",
+      "path": "/Users/vincentgibson/dev/meridianpathfinder/.meridian/deliverables/TechnicalReport.md"
+    },
+    {
+      "name": "PROJECT",
+      "path": "/Users/vincentgibson/dev/meridianpathfinder/PROJECT"
+    }
+  ],
+  "api_endpoints": [
+    {
+      "method": "GET",
+      "path": "/health"
+    },
+    {
+      "method": "POST",
+      "path": "/predict"
+    },
+    {
+      "method": "GET",
+      "path": "/metrics"
+    }
+  ],
+  "distribution_channels": [
+    "api",
+    "internal-dashboard",
+    "slack"
+  ]
+}

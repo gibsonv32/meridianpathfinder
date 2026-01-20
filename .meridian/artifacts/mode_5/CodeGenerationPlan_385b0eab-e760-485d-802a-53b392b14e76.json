@@ -1,0 +1,36 @@
+{
+  "artifact_id": "385b0eab-e760-485d-802a-53b392b14e76",
+  "artifact_type": "CodeGenerationPlan",
+  "schema_version": "2.3.1",
+  "created_at": "2026-01-20T17:25:56.041016Z",
+  "fingerprint_id": "385b0eab-e760-485d-802a-53b392b14e76",
+  "pipeline_spec": {
+    "steps": [
+      "Create a clean project package with src/ + tests/ layout",
+      "Implement data loading + schema checks",
+      "Implement feature prep consistent with Mode 3 FeatureRegistry (raw columns for MVP)",
+      "Train a baseline model and persist as a versioned artifact",
+      "Add evaluation script + metrics report",
+      "Implement predict() API (batch + single-row) with thresholding rules",
+      "Add smoke tests + deterministic run config",
+      "Encode business rules / routing from ThresholdFramework into prediction post-processing"
+    ]
+  },
+  "test_spec": {
+    "tests": [
+      "test_smoke_pipeline_runs",
+      "test_predict_returns_probability_and_label"
+    ]
+  },
+  "config_spec": {
+    "entries": {
+      "schema_version": "2.3.1",
+      "recommended_action": "PROCEED",
+      "gate_verdict_mode4": "go",
+      "prediction_thresholds": {
+        "primary_threshold": 0.5
+      }
+    }
+  },
+  "output_path": "/Users/vincentgibson/dev/meridianpathfinder/PROJECT"
+}
