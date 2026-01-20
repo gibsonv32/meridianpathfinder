@@ -124,4 +124,3 @@ REQUIRED_ARTIFACTS: dict[Mode, Optional[str]] = {
     Mode.MODE_6_5: "ExecutionOpsScorecard",
     Mode.MODE_7: "InterpretationPackage",
 }
-

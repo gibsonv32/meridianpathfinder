@@ -261,4 +261,3 @@ class FingerprintStore:
             except sqlite3.OperationalError:
                 return []
             return [dict(r) for r in rows]
-
