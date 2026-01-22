@@ -133,15 +133,43 @@ class OllamaProvider:
             return False
 
 
-def get_provider(config: dict) -> LLMProvider:
+def get_provider(config: dict, project_path: Optional["Path"] = None) -> LLMProvider:
+    from pathlib import Path
+    
     llm_cfg = config.get("llm") if isinstance(config.get("llm"), dict) else {}
     provider = (llm_cfg.get("provider") or "anthropic").lower()
     model = llm_cfg.get("model")
 
-    if provider == "ollama":
+    # Create base provider
+    if provider == "dgx":
+        # Use DGX router for dual-model routing
+        try:
+            from meridian.llm.router import get_dgx_provider
+            return get_dgx_provider(
+                fast_port=llm_cfg.get("fast_port", 30001),
+                reasoning_port=llm_cfg.get("reasoning_port", 30002),
+                host=llm_cfg.get("host", "localhost"),
+            )
+        except ImportError:
+            raise ValueError("DGX router not available. Copy deploy/llm_router.py to meridian/llm/router.py")
+    elif provider == "ollama":
         base_url = llm_cfg.get("base_url") or "http://localhost:11434"
-        return OllamaProvider(base_url=base_url, model=model or "llama3.1")
-    if provider == "anthropic":
-        return AnthropicProvider(api_key=llm_cfg.get("api_key"), model=model or "claude-sonnet-4-20250514")
-
-    raise ValueError(f"Unsupported LLM provider: {provider}")
+        base_provider = OllamaProvider(base_url=base_url, model=model or "llama3.1")
+    elif provider == "anthropic":
+        base_provider = AnthropicProvider(api_key=llm_cfg.get("api_key"), model=model or "claude-sonnet-4-20250514")
+    else:
+        raise ValueError(f"Unsupported LLM provider: {provider}")
+    
+    # Check if enhanced intelligence is enabled
+    intelligence_cfg = llm_cfg.get("intelligence", {})
+    if intelligence_cfg.get("enabled", False) and project_path:
+        from meridian.llm.intelligence import EnhancedLLMProvider
+        return EnhancedLLMProvider(
+            base_provider=base_provider,
+            project_path=project_path,
+            enable_memory=intelligence_cfg.get("memory", True),
+            enable_few_shot=intelligence_cfg.get("few_shot", True),
+            enable_optimization=intelligence_cfg.get("optimization", True)
+        )
+    
+    return base_provider

@@ -1,0 +1,30 @@
+{
+  "artifact_id": "5ec6c379-bd83-4e39-94ba-e4c67f8cbc6c",
+  "artifact_type": "ThresholdFramework",
+  "schema_version": "2.3.1",
+  "created_at": "2026-01-20T21:58:15.985670Z",
+  "fingerprint_id": "5ec6c379-bd83-4e39-94ba-e4c67f8cbc6c",
+  "prediction_thresholds": {
+    "primary_threshold": 0.5
+  },
+  "operational_thresholds": {
+    "latency_p99_ms": 100.0,
+    "error_rate_pct": 1.0
+  },
+  "governance_thresholds": {
+    "feature_psi_warn": 0.1,
+    "feature_psi_alert": 0.2
+  },
+  "business_rules": [
+    {
+      "rule_id": "BR001",
+      "condition": "score >= 0.7",
+      "action": "high_touch_intervention"
+    },
+    {
+      "rule_id": "BR002",
+      "condition": "0.4 <= score < 0.7",
+      "action": "automated_campaign"
+    }
+  ]
+}

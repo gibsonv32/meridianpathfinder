@@ -1,0 +1,91 @@
+version: "3.9"
+
+services:
+  # =============================================================================
+  # SGLang Server - DeepSeek-R1-Distill-Llama-70B with Speculative Decoding
+  # =============================================================================
+  sglang:
+    image: lmsysorg/sglang:latest
+    container_name: sglang-deepseek
+    runtime: nvidia
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    ports:
+      - "8000:8000"
+    volumes:
+      # HuggingFace cache for model weights
+      - ${HF_HOME:-~/.cache/huggingface}:/root/.cache/huggingface
+      # Persistent model cache on data volume
+      - /mnt/spark-data3/models:/models
+    environment:
+      - CUDA_VISIBLE_DEVICES=0,1
+      - HF_TOKEN=${HF_TOKEN:-}
+      - NCCL_P2P_DISABLE=0
+      - NCCL_IB_DISABLE=0
+    command: >
+      python -m sglang.launch_server
+      --model-path deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+      --port 8000
+      --host 0.0.0.0
+      --tp 2
+      --mem-fraction-static 0.88
+      --max-total-tokens 16384
+      --context-length 16384
+      --enable-torch-compile
+      --trust-remote-code
+      --speculative-algorithm EAGLE
+      --speculative-num-steps 5
+      --speculative-eagle-topk 8
+      --speculative-num-draft-tokens 64
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 300s  # 5 min startup for 70B model
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"
+
+  # =============================================================================
+  # Router Service - Routes between Claude (coding) and SGLang (reasoning)
+  # =============================================================================
+  router:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: inference-router
+    ports:
+      - "8080:8080"
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - SGLANG_URL=http://sglang:8000
+      - CLAUDE_MODEL=${CLAUDE_MODEL:-claude-sonnet-4-20250514}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    depends_on:
+      sglang:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+
+networks:
+  default:
+    name: inference-net
+    driver: bridge

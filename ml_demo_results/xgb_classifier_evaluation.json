@@ -1,0 +1,48 @@
+{
+  "model_name": "xgb_classifier",
+  "metrics": {
+    "accuracy": 0.92,
+    "precision": 0.9201680672268907,
+    "recall": 0.92,
+    "f1": 0.9199919991999201,
+    "auc": 0.9604
+  },
+  "confusion_matrix": [
+    [
+      91,
+      9
+    ],
+    [
+      7,
+      93
+    ]
+  ],
+  "classification_report": {
+    "0": {
+      "precision": 0.9285714285714286,
+      "recall": 0.91,
+      "f1-score": 0.9191919191919192,
+      "support": 100.0
+    },
+    "1": {
+      "precision": 0.9117647058823529,
+      "recall": 0.93,
+      "f1-score": 0.9207920792079208,
+      "support": 100.0
+    },
+    "accuracy": 0.92,
+    "macro avg": {
+      "precision": 0.9201680672268908,
+      "recall": 0.92,
+      "f1-score": 0.91999199919992,
+      "support": 200.0
+    },
+    "weighted avg": {
+      "precision": 0.9201680672268907,
+      "recall": 0.92,
+      "f1-score": 0.9199919991999201,
+      "support": 200.0
+    }
+  },
+  "feature_importance": null
+}

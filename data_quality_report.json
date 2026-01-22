@@ -1,0 +1,94 @@
+{
+  "dataset_name": "data_mode2",
+  "timestamp": "2026-01-20T16:48:19.298605",
+  "basic_info": {
+    "n_rows": 400,
+    "n_columns": 3,
+    "memory_usage_mb": 0.009281158447265625
+  },
+  "data_types": {
+    "column_types": {
+      "x1": "float64",
+      "x2": "float64",
+      "target": "int64"
+    },
+    "numeric_columns": [
+      "x1",
+      "x2",
+      "target"
+    ],
+    "categorical_columns": [],
+    "datetime_columns": []
+  },
+  "missing_values": {
+    "counts": {},
+    "percentages": {},
+    "columns_with_missing": []
+  },
+  "duplicates": {
+    "n_duplicates": 0,
+    "percentage": 0.0
+  },
+  "outliers": {
+    "counts": {
+      "x1": 5,
+      "x2": 2
+    },
+    "methods": {
+      "x1": "iqr",
+      "x2": "iqr"
+    }
+  },
+  "summaries": {
+    "numeric": {
+      "x1": {
+        "mean": -0.03661998011169509,
+        "median": -0.050202516085492754,
+        "std": 0.9963489764951352,
+        "min": -3.772275156122734,
+        "max": 3.0660367390488967,
+        "q25": -0.7038363174252862,
+        "q75": 0.6413646186298838,
+        "skewness": -0.036641025720193524,
+        "kurtosis": 0.3286936360020425
+      },
+      "x2": {
+        "mean": -0.015785728176963002,
+        "median": -0.0205354953885298,
+        "std": 1.0066295319937628,
+        "min": -3.899421730054339,
+        "max": 2.472435678832565,
+        "q25": -0.6896889463464135,
+        "q75": 0.7253891134375898,
+        "skewness": -0.16228370819064863,
+        "kurtosis": 0.10225761624634178
+      },
+      "target": {
+        "mean": 0.4875,
+        "median": 0.0,
+        "std": 0.5004697041900039,
+        "min": 0.0,
+        "max": 1.0,
+        "q25": 0.0,
+        "q75": 1.0,
+        "skewness": 0.05020409413466621,
+        "kurtosis": -2.007542449939976
+      }
+    },
+    "categorical": {}
+  },
+  "quality_assessment": {
+    "issues": [],
+    "warnings": [],
+    "recommendations": [
+      "Review and handle outliers in: x1, x2",
+      "Consider scaling/normalizing: x1, x2"
+    ]
+  },
+  "quality_scores": {
+    "completeness": 100.0,
+    "consistency": 100.0,
+    "validity": 99.125,
+    "overall": 99.7375
+  }
+}
