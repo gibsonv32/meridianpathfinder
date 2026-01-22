@@ -1,35 +1,28 @@
 [Unit]
 Description=MERIDIAN ML Pipeline Service
-After=network.target
+After=network.target docker.service
+Wants=docker.service
 
 [Service]
 Type=simple
 User=%i
-WorkingDirectory=/home/%i/meridianpathfinder
+WorkingDirectory=/home/%i/dev/meridian
 Environment="PATH=/home/%i/.local/bin:/usr/local/bin:/usr/bin:/bin"
-Environment="PYTHONPATH=/home/%i/meridianpathfinder"
-Environment="API_HOST=127.0.0.1"
-Environment="API_PORT=8000"
-Environment="LOG_LEVEL=INFO"
-EnvironmentFile=-/home/%i/meridianpathfinder/.env
+Environment="PYTHONPATH=/home/%i/dev/meridian"
+EnvironmentFile=-/home/%i/dev/meridian/.env
 
-# Use uv if available, otherwise fallback to python
-ExecStart=/bin/bash -c 'if command -v uv &> /dev/null; then uv run meridian api start; else python -m meridian.api.server; fi'
+# Use Docker Compose for full stack
+ExecStart=/usr/bin/docker compose -f /home/%i/dev/meridian/deploy/docker-compose.dgx.yml up
+ExecStop=/usr/bin/docker compose -f /home/%i/dev/meridian/deploy/docker-compose.dgx.yml down
 
 # Restart policy
 Restart=on-failure
-RestartSec=5s
+RestartSec=10s
+TimeoutStartSec=300
 
 # Resource limits (adjust for DGX capabilities)
 LimitNOFILE=65536
 LimitNPROC=4096
-
-# Security hardening
-PrivateTmp=true
-NoNewPrivileges=true
-ProtectSystem=strict
-ProtectHome=read-only
-ReadWritePaths=/home/%i/meridianpathfinder/data /home/%i/meridianpathfinder/.meridian /home/%i/meridianpathfinder/PROJECT
 
 [Install]
 WantedBy=multi-user.target

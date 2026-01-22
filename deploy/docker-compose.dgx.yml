@@ -1,0 +1,115 @@
+# =============================================================================
+# MERIDIAN Full Stack - DGX Spark Deployment
+# =============================================================================
+# Unified Docker Compose for complete MERIDIAN deployment:
+#   - MERIDIAN API (FastAPI backend)
+#   - Dashboard (React frontend)
+#   - Redis (optional session/cache)
+#
+# For LLM models, use vLLM directly (see start-models.sh)
+# =============================================================================
+
+version: "3.9"
+
+services:
+  # ===========================================================================
+  # MERIDIAN API Server
+  # ===========================================================================
+  api:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.api
+    container_name: meridian-api
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount project directory for dynamic project access
+      - ${PROJECT_PATH:-/home/gibsonv32/dev/meridian}:/app/workspace:ro
+      # Artifact storage on data volume
+      - /mnt/spark-data3/meridian/artifacts:/app/artifacts
+      # Logs
+      - /mnt/spark-data3/meridian/logs:/app/logs
+      # Data files
+      - /mnt/spark-data3/meridian/data:/app/data
+    environment:
+      # API Configuration
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      # LLM Configuration
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - LLM_PROVIDER=${LLM_PROVIDER:-dgx}
+      - DGX_HOST=${DGX_HOST:-host.docker.internal}
+      - DGX_FAST_PORT=${DGX_FAST_PORT:-30001}
+      - DGX_REASONING_PORT=${DGX_REASONING_PORT:-30002}
+      # Project paths
+      - DEFAULT_PROJECT_PATH=/app/workspace
+      - ARTIFACT_PATH=/app/artifacts
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+
+  # ===========================================================================
+  # MERIDIAN Dashboard
+  # ===========================================================================
+  dashboard:
+    build:
+      context: ../dashboard
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=${VITE_API_URL:-http://localhost:8000}
+        - VITE_WS_URL=${VITE_WS_URL:-ws://localhost:8000/ws}
+    container_name: meridian-dashboard
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "2"
+
+  # ===========================================================================
+  # Redis (Optional - for caching/sessions)
+  # ===========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: meridian-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    profiles:
+      - with-cache
+
+networks:
+  default:
+    name: meridian-net
+    driver: bridge
+
+volumes:
+  redis-data:
