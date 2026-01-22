@@ -1,15 +1,19 @@
-"""MERIDIAN REST API Server using FastAPI"""
+"""MERIDIAN REST API Server using FastAPI with WebSocket support"""
 
 import os
 import signal
 import logging
+import json
+import asyncio
 from pathlib import Path
-from typing import Any, Dict, List, Optional
-from datetime import datetime
+from typing import Any, Dict, List, Optional, Set
+from datetime import datetime, timezone
 from contextlib import asynccontextmanager
+from dataclasses import dataclass, field
 
-from fastapi import FastAPI, HTTPException, BackgroundTasks, Request
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 import uvicorn
 
@@ -26,10 +30,64 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+# WebSocket Connection Manager
+class ConnectionManager:
+    """Manages WebSocket connections for real-time updates"""
+    
+    def __init__(self):
+        self.active_connections: Set[WebSocket] = set()
+        self._lock = asyncio.Lock()
+    
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        async with self._lock:
+            self.active_connections.add(websocket)
+        logger.info(f"WebSocket connected. Total connections: {len(self.active_connections)}")
+    
+    async def disconnect(self, websocket: WebSocket):
+        async with self._lock:
+            self.active_connections.discard(websocket)
+        logger.info(f"WebSocket disconnected. Total connections: {len(self.active_connections)}")
+    
+    async def broadcast(self, event_type: str, payload: dict):
+        """Broadcast event to all connected clients"""
+        message = {
+            "type": event_type,
+            "payload": payload,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        message_json = json.dumps(message, default=str)
+        
+        disconnected = set()
+        async with self._lock:
+            for connection in self.active_connections:
+                try:
+                    await connection.send_text(message_json)
+                except Exception as e:
+                    logger.warning(f"Failed to send to websocket: {e}")
+                    disconnected.add(connection)
+            
+            # Clean up disconnected
+            self.active_connections -= disconnected
+    
+    async def send_to(self, websocket: WebSocket, event_type: str, payload: dict):
+        """Send event to specific client"""
+        message = {
+            "type": event_type,
+            "payload": payload,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        await websocket.send_text(json.dumps(message, default=str))
+
+
+# Global connection manager
+ws_manager = ConnectionManager()
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    logger.info("Starting MERIDIAN API server")
+    logger.info("Starting MERIDIAN API server with WebSocket support")
     yield
     # Shutdown
     logger.info("Shutting down MERIDIAN API server")
@@ -317,6 +375,326 @@ def run_demo(
         
     except Exception as e:
         raise HTTPException(500, str(e))
+
+
+# WebSocket endpoint
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    """WebSocket endpoint for real-time updates"""
+    await ws_manager.connect(websocket)
+    
+    try:
+        # Send initial connection confirmation
+        await ws_manager.send_to(websocket, "connected", {
+            "message": "Connected to MERIDIAN API",
+            "server_time": datetime.now(timezone.utc).isoformat()
+        })
+        
+        # Listen for incoming messages
+        while True:
+            try:
+                data = await websocket.receive_text()
+                message = json.loads(data)
+                await handle_ws_message(websocket, message)
+            except json.JSONDecodeError:
+                await ws_manager.send_to(websocket, "error", {
+                    "message": "Invalid JSON"
+                })
+    except WebSocketDisconnect:
+        await ws_manager.disconnect(websocket)
+    except Exception as e:
+        logger.error(f"WebSocket error: {e}")
+        await ws_manager.disconnect(websocket)
+
+
+async def handle_ws_message(websocket: WebSocket, message: dict):
+    """Handle incoming WebSocket messages"""
+    msg_type = message.get("type")
+    payload = message.get("payload", {})
+    
+    if msg_type == "ping":
+        await ws_manager.send_to(websocket, "pong", {"time": datetime.now(timezone.utc).isoformat()})
+    
+    elif msg_type == "subscribe":
+        # Subscribe to project updates
+        project_path = payload.get("project_path")
+        if project_path:
+            await ws_manager.send_to(websocket, "subscribed", {
+                "project_path": project_path
+            })
+    
+    elif msg_type == "run_mode":
+        # Trigger mode execution via WebSocket
+        project_path = payload.get("project_path")
+        mode_id = payload.get("mode")
+        params = payload.get("params", {})
+        
+        if project_path and mode_id:
+            # Start mode execution in background
+            asyncio.create_task(
+                execute_mode_with_updates(project_path, mode_id, params)
+            )
+            await ws_manager.send_to(websocket, "mode_update", {
+                "modeId": mode_id,
+                "status": "queued",
+                "message": f"Mode {mode_id} execution queued"
+            })
+    
+    elif msg_type == "command":
+        # Handle slash commands from dashboard
+        command = payload.get("command")
+        args = payload.get("args", {})
+        await handle_command(websocket, command, args)
+
+
+async def handle_command(websocket: WebSocket, command: str, args: dict):
+    """Handle slash commands from the dashboard"""
+    project_path = args.get("project_path", os.getcwd())
+    
+    if command == "status":
+        try:
+            project = MeridianProject.load(Path(project_path))
+            modes_status = []
+            for mode in Mode:
+                ms = project.state.mode_states[mode]
+                modes_status.append({
+                    "id": mode.value,
+                    "status": ms.status,
+                    "verdict": ms.gate_verdict.value if ms.gate_verdict else None,
+                    "artifactCount": len(ms.artifact_ids) if ms.artifact_ids else 0
+                })
+            
+            await ws_manager.send_to(websocket, "status_response", {
+                "project_name": project.state.project_name,
+                "modes": modes_status
+            })
+        except Exception as e:
+            await ws_manager.send_to(websocket, "error", {
+                "message": f"Failed to get status: {str(e)}"
+            })
+    
+    elif command == "artifacts":
+        try:
+            project = MeridianProject.load(Path(project_path))
+            artifacts = []
+            
+            if project.artifact_store.exists():
+                for p in project.artifact_store.rglob("*.json"):
+                    try:
+                        data = json.loads(p.read_text())
+                        artifacts.append({
+                            "id": data.get("artifact_id", ""),
+                            "type": data.get("artifact_type", ""),
+                            "modeId": p.parent.name.replace("mode_", "").replace("_", "."),
+                            "createdAt": data.get("created_at", ""),
+                            "name": data.get("artifact_type", "Unknown")
+                        })
+                    except:
+                        pass
+            
+            await ws_manager.send_to(websocket, "artifacts_response", {
+                "artifacts": artifacts
+            })
+        except Exception as e:
+            await ws_manager.send_to(websocket, "error", {
+                "message": f"Failed to list artifacts: {str(e)}"
+            })
+    
+    elif command.startswith("mode"):
+        # Run a specific mode
+        mode_id = args.get("mode") or command.replace("mode", "").strip()
+        if mode_id:
+            asyncio.create_task(
+                execute_mode_with_updates(project_path, mode_id, args)
+            )
+    
+    else:
+        await ws_manager.send_to(websocket, "error", {
+            "message": f"Unknown command: {command}"
+        })
+
+
+async def execute_mode_with_updates(project_path: str, mode_id: str, params: dict):
+    """Execute a mode and broadcast updates via WebSocket"""
+    try:
+        # Broadcast mode started
+        await ws_manager.broadcast("mode_update", {
+            "modeId": mode_id,
+            "status": "running",
+            "message": f"Starting Mode {mode_id}..."
+        })
+        
+        # Load project
+        project = MeridianProject.load(Path(project_path))
+        
+        # Get the mode executor
+        mode_enum = Mode(mode_id)
+        
+        # Import and run the mode
+        from meridian.modes import get_mode_runner
+        runner = get_mode_runner(mode_enum)
+        
+        # Execute mode
+        headless = params.get("headless", False)
+        result = await asyncio.to_thread(
+            runner.run,
+            project=project,
+            headless=headless,
+            **{k: v for k, v in params.items() if k != "headless"}
+        )
+        
+        # Broadcast success
+        await ws_manager.broadcast("mode_update", {
+            "modeId": mode_id,
+            "status": "completed",
+            "verdict": result.verdict.value if hasattr(result, 'verdict') else "go",
+            "message": f"Mode {mode_id} completed successfully"
+        })
+        
+        # If artifacts were created, broadcast them
+        if hasattr(result, 'artifact_ids'):
+            for artifact_id in result.artifact_ids:
+                await ws_manager.broadcast("artifact_created", {
+                    "id": artifact_id,
+                    "modeId": mode_id,
+                    "type": "artifact"
+                })
+        
+    except Exception as e:
+        logger.error(f"Mode {mode_id} execution failed: {e}")
+        await ws_manager.broadcast("mode_update", {
+            "modeId": mode_id,
+            "status": "failed",
+            "message": f"Mode {mode_id} failed: {str(e)}"
+        })
+        await ws_manager.broadcast("error", {
+            "message": str(e),
+            "severity": "error"
+        })
+
+
+# Additional REST endpoints for dashboard
+
+@app.get("/projects")
+def list_projects():
+    """List available MERIDIAN projects"""
+    # Check common locations for projects
+    projects = []
+    cwd = Path.cwd()
+    
+    # Check if current directory is a project
+    if (cwd / ".meridian").exists():
+        try:
+            project = MeridianProject.load(cwd)
+            projects.append({
+                "name": project.state.project_name,
+                "path": str(cwd),
+                "created_at": project.state.created_at.isoformat() if project.state.created_at else None
+            })
+        except:
+            pass
+    
+    return {"projects": projects}
+
+
+@app.get("/modes")
+def list_modes(project_path: str):
+    """Get all modes with their current status"""
+    try:
+        project = MeridianProject.load(Path(project_path))
+        
+        modes = []
+        for mode in Mode:
+            ms = project.state.mode_states[mode]
+            modes.append({
+                "id": mode.value,
+                "name": get_mode_name(mode),
+                "status": ms.status,
+                "verdict": ms.gate_verdict.value if ms.gate_verdict else None,
+                "artifactCount": len(ms.artifact_ids) if ms.artifact_ids else 0,
+                "startedAt": ms.started_at.isoformat() if ms.started_at else None,
+                "completedAt": ms.completed_at.isoformat() if ms.completed_at else None
+            })
+        
+        return {"modes": modes}
+    except Exception as e:
+        raise HTTPException(404, str(e))
+
+
+@app.get("/artifacts/{artifact_id}/download")
+def download_artifact(project_path: str, artifact_id: str):
+    """Download artifact as JSON file"""
+    try:
+        project = MeridianProject.load(Path(project_path))
+        
+        for p in project.artifact_store.rglob(f"*{artifact_id}*.json"):
+            return FileResponse(
+                path=p,
+                filename=p.name,
+                media_type="application/json"
+            )
+        
+        raise HTTPException(404, f"Artifact not found: {artifact_id}")
+    except Exception as e:
+        raise HTTPException(404, str(e))
+
+
+@app.get("/deliverables")
+def list_deliverables(project_path: str):
+    """List generated deliverables"""
+    try:
+        project = MeridianProject.load(Path(project_path))
+        deliverables_path = project.project_path / ".meridian" / "deliverables"
+        
+        deliverables = []
+        if deliverables_path.exists():
+            for p in deliverables_path.glob("*"):
+                if p.is_file():
+                    deliverables.append({
+                        "name": p.name,
+                        "path": str(p),
+                        "size": p.stat().st_size,
+                        "modified_at": datetime.fromtimestamp(p.stat().st_mtime, tz=timezone.utc).isoformat()
+                    })
+        
+        return {"deliverables": deliverables}
+    except Exception as e:
+        raise HTTPException(404, str(e))
+
+
+@app.get("/deliverables/{filename}")
+def get_deliverable(project_path: str, filename: str):
+    """Get deliverable content"""
+    try:
+        project = MeridianProject.load(Path(project_path))
+        deliverable_path = project.project_path / ".meridian" / "deliverables" / filename
+        
+        if not deliverable_path.exists():
+            raise HTTPException(404, f"Deliverable not found: {filename}")
+        
+        return {
+            "name": filename,
+            "content": deliverable_path.read_text()
+        }
+    except Exception as e:
+        raise HTTPException(404, str(e))
+
+
+def get_mode_name(mode: Mode) -> str:
+    """Get human-readable mode name"""
+    names = {
+        Mode.MODE_0_5: "Opportunity Discovery",
+        Mode.MODE_0: "Data Fingerprint",
+        Mode.MODE_1: "Decision Intelligence",
+        Mode.MODE_2: "Feasibility Assessment",
+        Mode.MODE_3: "Feature Engineering",
+        Mode.MODE_4: "Business Case",
+        Mode.MODE_5: "Code Generation",
+        Mode.MODE_6: "Execution & Testing",
+        Mode.MODE_6_5: "Interpretation",
+        Mode.MODE_7: "Delivery"
+    }
+    return names.get(mode, f"Mode {mode.value}")
 
 
 # Async helper functions

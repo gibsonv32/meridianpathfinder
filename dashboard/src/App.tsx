@@ -1,22 +1,122 @@
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 import { Layout } from './components/Layout';
 import { useDashboardStore } from './store';
 import { useWebSocket } from './hooks/useWebSocket';
+import { api } from './api/client';
+import type { ModeInfo, ModeId, ArtifactSummary } from './types';
 
 export function App() {
-  const setConnectionStatus = useDashboardStore((s) => s.setConnectionStatus);
+  const {
+    setConnectionStatus,
+    setCurrentProject,
+    setModes,
+    setArtifacts,
+    addActivity,
+  } = useDashboardStore();
   
   // Initialize WebSocket connection
   useWebSocket();
 
-  // Simulate initial connection
-  useEffect(() => {
-    const timer = setTimeout(() => {
+  // Load initial data from API
+  const loadProjectData = useCallback(async () => {
+    try {
+      // Get project path from env or use current directory
+      const projectPath = (import.meta as any).env?.VITE_PROJECT_PATH || 
+        window.location.pathname.replace('/dashboard', '') || 
+        '.';
+      
+      api.setProjectPath(projectPath);
+      
+      // Check API health first
+      const health = await api.health();
+      if (health.status !== 'ok') {
+        throw new Error('API not healthy');
+      }
+      
       setConnectionStatus('connected');
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, [setConnectionStatus]);
+      
+      // Load project status
+      const status = await api.getStatus();
+      setCurrentProject({
+        id: status.project_name.toLowerCase().replace(/\s+/g, '-'),
+        name: status.project_name,
+        path: status.path,
+        createdAt: new Date().toISOString(),
+      });
+      
+      // Convert modes to dashboard format
+      const modeDefinitions: Record<string, { name: string; description: string }> = {
+        '0': { name: 'EDA', description: 'Exploratory Data Analysis' },
+        '0.5': { name: 'Opportunity', description: 'Opportunity Discovery' },
+        '1': { name: 'Decision Intel', description: 'Decision Intelligence Profile' },
+        '2': { name: 'Feasibility', description: 'Feasibility Assessment' },
+        '3': { name: 'Strategy', description: 'Model Strategy & Features' },
+        '4': { name: 'Business Case', description: 'Business Case Scorecard' },
+        '5': { name: 'Code Gen', description: 'Code Generation Plan' },
+        '6': { name: 'Execution', description: 'Execution & Operations' },
+        '6.5': { name: 'Interpretation', description: 'Model Interpretation' },
+        '7': { name: 'Delivery', description: 'Delivery Manifest' },
+      };
+      
+      const modes: ModeInfo[] = status.modes.map(m => ({
+        id: m.mode as ModeId,
+        name: modeDefinitions[m.mode]?.name || `Mode ${m.mode}`,
+        description: modeDefinitions[m.mode]?.description || '',
+        status: (m.status === 'complete' ? 'completed' : m.status) as ModeInfo['status'],
+        verdict: m.verdict as ModeInfo['verdict'],
+        artifactCount: m.artifacts?.length || 0,
+      }));
+      
+      setModes(modes);
+      
+      // Load artifacts
+      const artifactList = await api.listArtifacts({ latest_only: true });
+      const artifacts: ArtifactSummary[] = artifactList.map(a => ({
+        id: a.artifact_id,
+        type: a.artifact_type,
+        modeId: a.mode as ModeId,
+        createdAt: a.created_at,
+        name: a.artifact_type,
+        verified: a.verified,
+      }));
+      
+      setArtifacts(artifacts);
+      
+      // Add system activity
+      addActivity({
+        id: crypto.randomUUID(),
+        type: 'system_notice',
+        timestamp: new Date().toISOString(),
+        content: `Connected to project: ${status.project_name}`,
+        severity: 'info',
+      });
+      
+      toast.success(`Connected to ${status.project_name}`);
+      
+    } catch (error) {
+      console.error('Failed to load project data:', error);
+      setConnectionStatus('offline');
+      
+      // Add error activity
+      addActivity({
+        id: crypto.randomUUID(),
+        type: 'system_notice',
+        timestamp: new Date().toISOString(),
+        content: `Failed to connect to backend: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        severity: 'warning',
+      });
+      
+      // Still show the dashboard but in demo mode
+      toast.error('Running in demo mode - backend unavailable');
+    }
+  }, [setConnectionStatus, setCurrentProject, setModes, setArtifacts, addActivity]);
+
+  // Load data on mount
+  useEffect(() => {
+    loadProjectData();
+  }, [loadProjectData]);
 
   return (
     <>

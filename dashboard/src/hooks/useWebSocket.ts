@@ -1,10 +1,15 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useDashboardStore } from '../store';
-import type { WSEvent, ModeId, ToolExecution, ArtifactSummary } from '../types';
+import type { WSEvent, ModeId, ToolExecution, ArtifactSummary, ModeInfo } from '../types';
 
 const WS_URL = (import.meta as any).env?.VITE_WS_URL || 'ws://localhost:8000/ws';
 const RECONNECT_DELAY = 3000;
 const MAX_RECONNECT_ATTEMPTS = 10;
+
+// Get project path from env or default
+const getProjectPath = () => {
+  return (import.meta as any).env?.VITE_PROJECT_PATH || '.';
+};
 
 export function useWebSocket() {
   const wsRef = useRef<WebSocket | null>(null);
@@ -17,6 +22,7 @@ export function useWebSocket() {
     updateActivity,
     updateMode,
     addArtifact,
+    setArtifacts,
   } = useDashboardStore();
 
   const connect = useCallback(() => {
@@ -74,6 +80,19 @@ export function useWebSocket() {
     console.log('[WS] Event:', event.type, event.payload);
 
     switch (event.type) {
+      case 'connected': {
+        // Server confirmed connection
+        const payload = event.payload as { message: string };
+        addActivity({
+          id: crypto.randomUUID(),
+          type: 'system_notice',
+          timestamp: event.timestamp,
+          content: payload.message,
+          severity: 'info',
+        });
+        break;
+      }
+
       case 'mode_update': {
         const payload = event.payload as {
           modeId: ModeId;
@@ -84,15 +103,15 @@ export function useWebSocket() {
 
         // Update mode state
         updateMode(payload.modeId, {
-          status: payload.status as any,
-          verdict: payload.verdict as any,
+          status: (payload.status === 'complete' ? 'completed' : payload.status) as ModeInfo['status'],
+          verdict: payload.verdict as ModeInfo['verdict'],
           lastRunAt: event.timestamp,
         });
 
         // Add activity
         const activityType =
           payload.status === 'running' ? 'mode_running' :
-          payload.status === 'completed' ? 'mode_completed' :
+          payload.status === 'completed' || payload.status === 'complete' ? 'mode_completed' :
           payload.status === 'failed' ? 'mode_failed' : 'mode_started';
 
         addActivity({
@@ -102,6 +121,48 @@ export function useWebSocket() {
           modeId: payload.modeId,
           content: payload.message,
         });
+        break;
+      }
+
+      case 'status_response': {
+        // Response to /status command
+        const payload = event.payload as {
+          project_name: string;
+          modes: Array<{ id: string; status: string; verdict?: string; artifactCount: number }>;
+        };
+        
+        // Update all modes
+        payload.modes.forEach(m => {
+          updateMode(m.id as ModeId, {
+            status: (m.status === 'complete' ? 'completed' : m.status) as ModeInfo['status'],
+            verdict: m.verdict as ModeInfo['verdict'],
+            artifactCount: m.artifactCount,
+          });
+        });
+        break;
+      }
+
+      case 'artifacts_response': {
+        // Response to /artifacts command
+        const payload = event.payload as {
+          artifacts: Array<{
+            id: string;
+            type: string;
+            modeId: string;
+            createdAt: string;
+            name: string;
+          }>;
+        };
+        
+        const artifacts: ArtifactSummary[] = payload.artifacts.map(a => ({
+          id: a.id,
+          type: a.type,
+          modeId: a.modeId as ModeId,
+          createdAt: a.createdAt,
+          name: a.name,
+        }));
+        
+        setArtifacts(artifacts);
         break;
       }
 
@@ -160,17 +221,49 @@ export function useWebSocket() {
         });
         break;
       }
+
+      case 'pong': {
+        // Heartbeat response - no action needed
+        break;
+      }
     }
-  }, [addActivity, updateActivity, updateMode, addArtifact]);
+  }, [addActivity, updateActivity, updateMode, addArtifact, setArtifacts]);
 
   // Send message
   const send = useCallback((type: string, payload: unknown) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify({ type, payload }));
+      return true;
     } else {
       console.warn('[WS] Cannot send - not connected');
+      return false;
     }
   }, []);
+
+  // Send a command (slash command)
+  const sendCommand = useCallback((command: string, args: Record<string, unknown> = {}) => {
+    return send('command', {
+      command,
+      args: {
+        ...args,
+        project_path: getProjectPath(),
+      },
+    });
+  }, [send]);
+
+  // Run a mode
+  const runMode = useCallback((modeId: string, params: Record<string, unknown> = {}) => {
+    return send('run_mode', {
+      project_path: getProjectPath(),
+      mode: modeId,
+      params,
+    });
+  }, [send]);
+
+  // Subscribe to project updates
+  const subscribe = useCallback((projectPath: string) => {
+    return send('subscribe', { project_path: projectPath });
+  }, [send]);
 
   // Connect on mount
   useEffect(() => {
@@ -199,5 +292,5 @@ export function useWebSocket() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  return { send };
+  return { send, sendCommand, runMode, subscribe };
 }

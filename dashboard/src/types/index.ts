@@ -81,7 +81,8 @@ export interface ActivityItem {
 // -----------------------------------------------------------------------------
 // Artifact Types
 // -----------------------------------------------------------------------------
-export type ArtifactType = 
+// Known artifact types from MERIDIAN pipeline
+export type KnownArtifactType = 
   | 'Mode0GatePacket'
   | 'OpportunityBrief'
   | 'OpportunityBacklog'
@@ -97,6 +98,9 @@ export type ArtifactType =
   | 'DeliveryManifest'
   | 'DataFile'
   | 'Unknown';
+
+// Allow any string for dynamic artifact types from backend
+export type ArtifactType = KnownArtifactType | string;
 
 export interface ArtifactSummary {
   id: string;
@@ -150,10 +154,15 @@ export interface Project {
 // WebSocket Event Types
 // -----------------------------------------------------------------------------
 export type WSEventType = 
+  | 'connected'
+  | 'subscribed'
   | 'mode_update'
   | 'tool_output'
   | 'artifact_created'
   | 'connection_status'
+  | 'status_response'
+  | 'artifacts_response'
+  | 'pong'
   | 'error';
 
 export interface WSEvent {

@@ -12,7 +12,8 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useDashboardStore } from '../store';
-import type { Attachment } from '../types';
+import { useWebSocket } from '../hooks/useWebSocket';
+import type { Attachment, ModeId } from '../types';
 import toast from 'react-hot-toast';
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
@@ -31,7 +32,10 @@ export function CommandInput() {
     addActivity,
     addToCommandHistory,
     commandHistory,
+    connectionStatus,
   } = useDashboardStore();
+
+  const { sendCommand, runMode } = useWebSocket();
 
   // Handle file drops
   const onDrop = useCallback(
@@ -131,45 +135,100 @@ export function CommandInput() {
     const parts = command.slice(1).split(/\s+/);
     const cmd = parts[0]?.toLowerCase();
 
+    // Check if connected
+    const isConnected = connectionStatus === 'connected';
+
     switch (cmd) {
       case 'run':
-        // Simulate mode run
-        const modeId = parts[2] || '0';
-        addActivity({
-          id: crypto.randomUUID(),
-          type: 'mode_started',
-          timestamp: new Date().toISOString(),
-          modeId: modeId as any,
-          content: `Starting mode ${modeId}...`,
-        });
+      case 'mode': {
+        // Extract mode ID from command like "/run mode 0" or "/mode 0"
+        let modeId = cmd === 'mode' ? parts[1] : parts[2];
+        if (!modeId && parts[1] === 'mode') {
+          modeId = parts[2];
+        }
+        modeId = modeId || '0';
+
+        if (isConnected) {
+          // Send via WebSocket
+          runMode(modeId, { headless: parts.includes('--headless') });
+          toast.success(`Running mode ${modeId}...`);
+        } else {
+          // Fallback to local simulation
+          addActivity({
+            id: crypto.randomUUID(),
+            type: 'mode_started',
+            timestamp: new Date().toISOString(),
+            modeId: modeId as ModeId,
+            content: `Starting mode ${modeId}... (demo mode - not connected)`,
+          });
+        }
         break;
+      }
+
       case 'status':
-        addActivity({
-          id: crypto.randomUUID(),
-          type: 'system_notice',
-          timestamp: new Date().toISOString(),
-          content: 'Project status: 3/10 modes completed. Current mode: idle.',
-          severity: 'info',
-        });
+        if (isConnected) {
+          sendCommand('status');
+        } else {
+          addActivity({
+            id: crypto.randomUUID(),
+            type: 'system_notice',
+            timestamp: new Date().toISOString(),
+            content: 'Not connected to backend. Run `meridian serve` to start the API server.',
+            severity: 'warning',
+          });
+        }
         break;
+
+      case 'artifacts':
+        if (isConnected) {
+          sendCommand('artifacts');
+        } else {
+          addActivity({
+            id: crypto.randomUUID(),
+            type: 'system_notice',
+            timestamp: new Date().toISOString(),
+            content: 'Not connected to backend.',
+            severity: 'warning',
+          });
+        }
+        break;
+
+      case 'clear':
+        useDashboardStore.getState().clearActivities();
+        toast.success('Activity feed cleared');
+        break;
+
       case 'help':
         addActivity({
           id: crypto.randomUUID(),
           type: 'system_notice',
           timestamp: new Date().toISOString(),
-          content:
-            'Available commands:\n/run mode <N> - Run a specific mode\n/status - Show project status\n/artifacts - List artifacts\n/clear - Clear activity feed',
+          content: `Available commands:
+/run mode <N>  - Run a specific mode (0, 0.5, 1, 2, 3, 4, 5, 6, 6.5, 7)
+/mode <N>      - Shorthand for /run mode
+/status        - Show project status
+/artifacts     - List artifacts
+/clear         - Clear activity feed
+/help          - Show this help
+
+Connection: ${isConnected ? '✓ Connected' : '✗ Offline (demo mode)'}`,
           severity: 'info',
         });
         break;
+
       default:
-        addActivity({
-          id: crypto.randomUUID(),
-          type: 'system_notice',
-          timestamp: new Date().toISOString(),
-          content: `Unknown command: ${cmd}`,
-          severity: 'warning',
-        });
+        // Try to send as generic command if connected
+        if (isConnected) {
+          sendCommand(cmd, { args: parts.slice(1) });
+        } else {
+          addActivity({
+            id: crypto.randomUUID(),
+            type: 'system_notice',
+            timestamp: new Date().toISOString(),
+            content: `Unknown command: ${cmd}. Type /help for available commands.`,
+            severity: 'warning',
+          });
+        }
     }
   };
 

@@ -1,7 +1,7 @@
 {
   "model_type": "LogisticRegression",
-  "n_rows": 400,
-  "n_features": 2,
-  "target_col": "target",
+  "n_rows": 6,
+  "n_features": 4,
+  "target_col": "segment",
   "val_auc": 1.0
 }
