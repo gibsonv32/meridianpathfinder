@@ -1,0 +1,26 @@
+{
+  "state": "closed",
+  "failures": 0,
+  "total_cost": 0.035,
+  "last_failure_time": null,
+  "healing_history": [
+    {
+      "timestamp": "2026-01-22T17:54:02.226887",
+      "operation": "csv_diagnosis",
+      "status": "success",
+      "cost": 0.01
+    },
+    {
+      "timestamp": "2026-01-22T17:54:02.238253",
+      "operation": "quality_fix",
+      "status": "success",
+      "cost": 0.005
+    },
+    {
+      "timestamp": "2026-01-22T17:54:02.248549",
+      "operation": "quality_advice",
+      "status": "success",
+      "cost": 0.02
+    }
+  ]
+}

@@ -1,0 +1,163 @@
+{
+  "artifact_id": "c719b787-ac12-43bf-94a6-52762ab606c9",
+  "artifact_type": "Mode0GatePacket",
+  "schema_version": "2.3.1",
+  "created_at": "2026-01-22T22:54:02.258253Z",
+  "fingerprint_id": "c719b787-ac12-43bf-94a6-52762ab606c9",
+  "dataset_fingerprint": {
+    "n_rows": 500,
+    "n_cols": 8,
+    "column_types": {
+      "customer_age": "int64",
+      "account_balance": "float64",
+      "transaction_count": "int64",
+      "days_since_last_purchase": "float64",
+      "product_category": "object",
+      "customer_segment": "object",
+      "has_premium": "bool",
+      "churn": "int64"
+    },
+    "memory_usage_mb": 0.07985782623291016,
+    "file_hash": "4ab47cb28e7037695bb99fd2a88693206241e21d24229cbd296b43099c0a787f"
+  },
+  "quality_assessment": {
+    "missing_pct": {
+      "customer_age": 0.0,
+      "account_balance": 0.14,
+      "transaction_count": 0.0,
+      "days_since_last_purchase": 0.1,
+      "product_category": 0.0,
+      "customer_segment": 0.0,
+      "has_premium": 0.0,
+      "churn": 0.0
+    },
+    "duplicate_rows": 0,
+    "constant_columns": [],
+    "high_cardinality_columns": [],
+    "outlier_columns": [
+      "account_balance",
+      "transaction_count"
+    ]
+  },
+  "distribution_summary": {
+    "customer_age": {
+      "stats": {
+        "count": 500,
+        "mean": 49.91,
+        "std": 18.22190922905456,
+        "min": 18.0,
+        "q25": 35.0,
+        "median": 50.0,
+        "q75": 66.0,
+        "max": 79.0,
+        "skew": -0.07884760256918476,
+        "kurtosis": -1.1303427547083995
+      }
+    },
+    "account_balance": {
+      "stats": {
+        "count": 430,
+        "mean": 28045.729794246963,
+        "std": 150235.55671940302,
+        "min": 54.48403307587739,
+        "q25": 1376.8724833955184,
+        "median": 3530.481131003632,
+        "q75": 7114.070151434014,
+        "max": 1000000.0,
+        "skew": 6.337387554254566,
+        "kurtosis": 38.3899678778201
+      }
+    },
+    "transaction_count": {
+      "stats": {
+        "count": 500,
+        "mean": 49.708,
+        "std": 8.497243216747956,
+        "min": -1.0,
+        "q25": 46.0,
+        "median": 50.0,
+        "q75": 55.0,
+        "max": 71.0,
+        "skew": -1.9672393041344602,
+        "kurtosis": 11.046469760259937
+      }
+    },
+    "days_since_last_purchase": {
+      "stats": {
+        "count": 450,
+        "mean": 182.40222222222224,
+        "std": 105.08083851546434,
+        "min": 0.0,
+        "q25": 89.0,
+        "median": 177.0,
+        "q75": 269.75,
+        "max": 364.0,
+        "skew": 0.07047899305690924,
+        "kurtosis": -1.2105532856661991
+      }
+    },
+    "product_category": {
+      "stats": {
+        "unique_count": 4,
+        "top_values": {
+          "Food": 141,
+          "Electronics": 128,
+          "Clothing": 116,
+          "Books": 115
+        }
+      }
+    },
+    "customer_segment": {
+      "stats": {
+        "unique_count": 6,
+        "top_values": {
+          "Gold": 173,
+          "Silver": 153,
+          "Bronze": 149,
+          "gold": 10,
+          "bronze": 8
+        }
+      }
+    },
+    "has_premium": {
+      "stats": {
+        "unique_count": 2,
+        "top_values": {
+          "False": 347,
+          "True": 153
+        }
+      }
+    },
+    "churn": {
+      "stats": {
+        "count": 500,
+        "mean": 0.216,
+        "std": 0.41192640936636604,
+        "min": 0.0,
+        "q25": 0.0,
+        "median": 0.0,
+        "q75": 0.0,
+        "max": 1.0,
+        "skew": 1.3844247698884142,
+        "kurtosis": -0.0837189672655132
+      }
+    }
+  },
+  "risks": [
+    {
+      "severity": "LOW",
+      "description": "Column 'account_balance' is severely skewed (skew=6.34).",
+      "mitigation": "Consider transforms (log/Box-Cox) or robust models."
+    },
+    {
+      "severity": "MEDIUM",
+      "description": "Data quality assessment",
+      "mitigation": "Data Quality Insights:\nImpute 'account_balance' with median/mean\nImpute 'days_since_last_purchase' with median/mean"
+    },
+    {
+      "severity": "LOW",
+      "description": "LLM narrative summary attached.",
+      "mitigation": "Mock response to: === CURRENT REQUEST ===\nSummarize this dataset EDA"
+    }
+  ]
+}

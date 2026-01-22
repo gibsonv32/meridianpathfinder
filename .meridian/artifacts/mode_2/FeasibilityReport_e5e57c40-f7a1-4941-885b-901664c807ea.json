@@ -1,0 +1,59 @@
+{
+  "artifact_id": "e5e57c40-f7a1-4941-885b-901664c807ea",
+  "artifact_type": "FeasibilityReport",
+  "schema_version": "2.3.1",
+  "created_at": "2026-01-22T22:54:02.289018Z",
+  "fingerprint_id": "e5e57c40-f7a1-4941-885b-901664c807ea",
+  "split_info": {
+    "train_size": 349,
+    "val_size": 75,
+    "test_size": 76,
+    "split_method": "stratified",
+    "split_params": {
+      "train_pct": 0.7,
+      "val_pct": 0.15
+    }
+  },
+  "baseline_results": {
+    "model_type": "LogisticRegression",
+    "metrics": {
+      "primary": 0.4671610169491525
+    },
+    "feature_importances": null
+  },
+  "probe_results": {
+    "label_shuffle": {
+      "status": "FAIL",
+      "details": {
+        "baseline": 0.4671610169491525,
+        "shuffled": 0.4353813559322034,
+        "drop": 0.03177966101694912
+      }
+    },
+    "future_feature": {
+      "status": "PASS",
+      "details": {
+        "flagged": []
+      }
+    },
+    "time_travel": {
+      "status": "WARN",
+      "details": {
+        "reason": "no date_col provided"
+      }
+    },
+    "join_fanout": {
+      "status": "PASS",
+      "details": {
+        "note": "no joins in baseline pipeline"
+      }
+    }
+  },
+  "signal_validation": {
+    "baseline_metric": 0.4671610169491525,
+    "random_metric": 0.5,
+    "lift": -0.06567796610169496,
+    "signal_present": false
+  },
+  "gate_verdict": "no_go"
+}

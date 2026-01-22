@@ -2,8 +2,15 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Literal, Optional, Self
+from typing import Any, Dict, List, Literal, Optional
 from uuid import uuid4
+
+try:
+    from typing import Self
+except ImportError:
+    # Python < 3.11
+    from typing import TypeVar
+    Self = TypeVar("Self", bound="BaseArtifact")
 
 from pydantic import BaseModel, Field
 

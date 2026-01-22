@@ -551,6 +551,35 @@ class EnhancedLLMProvider:
             opt_path = intelligence_dir / "optimization.json" if intelligence_dir else None
             self.optimizer = PromptOptimizer(optimization_path=opt_path)
     
+    def complete_structured(self,
+                           prompt: str,
+                           schema: Type[BaseModel],
+                           mode: Optional[str] = None,
+                           system: Optional[str] = None,
+                           **kwargs) -> BaseModel:
+        """
+        Complete with structured output using intelligence features
+        
+        Args:
+            prompt: Base prompt
+            schema: Pydantic schema for structured output
+            mode: Current mode for context
+            system: System prompt
+            
+        Returns:
+            Validated Pydantic model instance
+        """
+        # Enhance prompt with intelligence features
+        enhanced_prompt = self._enhance_prompt(prompt, mode)
+        
+        # Call base provider's complete_structured
+        return self.base_provider.complete_structured(
+            enhanced_prompt,
+            schema=schema,
+            system=system,
+            **kwargs
+        )
+    
     def complete(self, 
                 prompt: str,
                 mode: Optional[str] = None,
@@ -749,6 +778,53 @@ Code generation best practices:
         if self.memory:
             self.memory.update_context(key, value)
     
+    def add_healing_example(self, error_type: str, fix: str, success: bool):
+        """
+        Store successful healing attempts as few-shot examples.
+        
+        Args:
+            error_type: Type of error that was healed
+            fix: The fix that was applied
+            success: Whether the healing was successful
+        """
+        if success and self.few_shot:
+            # Create a healing example
+            self.few_shot.add_example(
+                mode="healer",
+                input_context={"error_type": error_type},
+                prompt=f"Fix {error_type} error",
+                response=str(fix),
+                quality_score=1.0
+            )
+            
+            # Also add to memory if available
+            if self.memory:
+                self.memory.add_turn(
+                    mode="healer",
+                    prompt=f"Heal {error_type}",
+                    response=f"Applied fix: {fix}",
+                    success=True,
+                    metadata={"error_type": error_type, "fix": fix}
+                )
+    
+    def get_healing_history(self) -> List[Dict[str, Any]]:
+        """
+        Get history of healing attempts.
+        
+        Returns:
+            List of healing examples
+        """
+        if self.few_shot and "healer" in self.few_shot.examples_by_mode:
+            return [
+                {
+                    "error_type": ex.input_context.get("error_type"),
+                    "fix": ex.response,
+                    "quality": ex.quality_score
+                }
+                for ex in self.few_shot.examples_by_mode["healer"]
+            ]
+        return []
+    
     def get_performance_report(self) -> Dict[str, Any]:
         """Get intelligence performance report"""
         report = {
@@ -758,6 +834,10 @@ Code generation best practices:
         
         if self.optimizer:
             report["prompt_optimization"] = self.optimizer.get_performance_report()
+        
+        # Add healing stats
+        if self.few_shot and "healer" in self.few_shot.examples_by_mode:
+            report["healing_examples"] = len(self.few_shot.examples_by_mode["healer"])
         
         return report
 

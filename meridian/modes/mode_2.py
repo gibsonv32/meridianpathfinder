@@ -38,7 +38,17 @@ class Mode2Executor:
         t0 = perf_counter()
         self.project.start_mode(Mode.MODE_2)
 
-        df = pd.read_csv(Path(data_path).expanduser().resolve())
+        # Try self-healing CSV load if available
+        data_path = Path(data_path).expanduser().resolve()
+        if self.llm:
+            try:
+                from meridian.data.healer import DataHealer
+                healer = DataHealer(self.llm, self.project.project_path)
+                df = healer.resilient_read_csv(data_path)
+            except Exception:
+                df = pd.read_csv(data_path)
+        else:
+            df = pd.read_csv(data_path)
         if target_col not in df.columns:
             raise ValueError(f"target_col '{target_col}' not in dataset")
 
