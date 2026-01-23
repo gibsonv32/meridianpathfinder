@@ -1,28 +1,23 @@
 # MERIDIAN Configuration for DGX Spark Deployment
 # Copy this to your project as meridian.yaml
+# 
+# Infrastructure:
+#   - DGX Spark: spark-ad77 (192.168.68.74)
+#   - SGLang: gpt-oss-120b on port 30000
+#   - Claude Opus 4.5: For code generation (Mode 5)
 
 project:
   name: meridian-dgx
   version: 0.1.0
-  description: "MERIDIAN on DGX Spark with dual-model routing"
+  description: "MERIDIAN on DGX Spark with gpt-oss-120b + Claude Opus 4.5"
 
-# LLM Configuration - DGX Router
+# LLM Configuration - SGLang gpt-oss-120b as primary
 llm:
-  # Use 'dgx' provider for dual-model routing
-  provider: dgx
-  host: localhost
-  
-  # Fast model: Qwen-14B for simple tasks (Modes 0, 0.5, 1, 7)
-  fast_port: 30001
-  fast_model: "Qwen/Qwen2.5-14B-Instruct"
-  
-  # Reasoning model: DeepSeek-70B for complex analysis (Modes 2-6.5)
-  reasoning_port: 30002
-  reasoning_model: "deepseek-ai/DeepSeek-R1-Distill-Llama-70B"
-  
-  # Fallback to Anthropic if DGX models unavailable
-  fallback_provider: anthropic
-  fallback_model: claude-3-haiku-20240307
+  # PRIMARY: gpt-oss-120b via SGLang (OpenAI-compatible API)
+  provider: openai
+  base_url: ${OPENAI_API_BASE_URL:-http://127.0.0.1:30000/v1}
+  model: openai/gpt-oss-120b
+  api_key: not-needed  # SGLang doesn't require auth
   
   # Model parameters
   temperature: 0.3
@@ -34,6 +29,14 @@ llm:
     memory: true
     few_shot: true
     optimization: true
+  
+  # Mode-specific overrides
+  mode_overrides:
+    mode_5:  # Code generation - use Claude Opus 4.5
+      provider: anthropic
+      model: claude-opus-4-20250514
+      temperature: 0.2  # More deterministic for code
+      max_tokens: 8192
 
 # Data Configuration
 data:

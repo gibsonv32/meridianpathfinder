@@ -1,27 +1,32 @@
 # =============================================================================
-# MERIDIAN Full Stack - DGX Spark Deployment
+# MERIDIAN Full Stack - DGX Spark Deployment (Self-Hosted / Secure by Default)
 # =============================================================================
-# Unified Docker Compose for complete MERIDIAN deployment:
-#   - MERIDIAN API (FastAPI backend)
-#   - Dashboard (React frontend)
-#   - Redis (optional session/cache)
+# Security posture: Localhost-only binding + SSH tunnel access from MacBook
 #
-# For LLM models, use vLLM directly (see start-models.sh)
+# Access pattern:
+#   1. SSH tunnel: ssh -L 3000:localhost:3000 -L 8000:localhost:8000 gibsonv32@spark-ad77
+#   2. Open in browser: http://localhost:3000 (dashboard), http://localhost:8000/docs (API)
+#
+# This keeps all services inaccessible from LAN by default.
 # =============================================================================
 
 version: "3.9"
 
 services:
   # ===========================================================================
-  # MERIDIAN API Server
+  # MERIDIAN API Server (localhost-only, bridge network)
   # ===========================================================================
   api:
     build:
       context: ..
       dockerfile: deploy/Dockerfile.api
     container_name: meridian-api
+    # Bridge network + localhost-only port binding (secure by default)
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
+    # Connect to host services via extra_hosts
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       # Mount project directory for dynamic project access
       - ${PROJECT_PATH:-/home/gibsonv32/dev/meridian}:/app/workspace:ro
@@ -32,27 +37,28 @@ services:
       # Data files
       - /mnt/spark-data3/meridian/data:/app/data
     environment:
-      # API Configuration
+      # API Configuration - bind inside container to 0.0.0.0, but port only exposed to localhost
       - API_HOST=0.0.0.0
       - API_PORT=8000
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
-      # LLM Configuration
+      # CORS - localhost only (SSH tunnel access)
+      - CORS_ORIGINS=http://localhost:3000,http://localhost:8080
+      # LLM Configuration - SGLang via Docker bridge gateway
+      - OPENAI_API_BASE_URL=http://host.docker.internal:30000/v1
+      - OPENAI_API_KEY=not-needed
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      - LLM_PROVIDER=${LLM_PROVIDER:-dgx}
-      - DGX_HOST=${DGX_HOST:-host.docker.internal}
-      - DGX_FAST_PORT=${DGX_FAST_PORT:-30001}
-      - DGX_REASONING_PORT=${DGX_REASONING_PORT:-30002}
+      - LLM_PROVIDER=openai
+      - LLM_MODEL=openai/gpt-oss-120b
       # Project paths
       - DEFAULT_PROJECT_PATH=/app/workspace
       - ARTIFACT_PATH=/app/artifacts
+      - DATA_DIR=/mnt/spark-data3/meridian
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
     restart: unless-stopped
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     logging:
       driver: "json-file"
       options:
@@ -60,18 +66,20 @@ services:
         max-file: "3"
 
   # ===========================================================================
-  # MERIDIAN Dashboard
+  # MERIDIAN Dashboard (localhost-only, SSH tunnel access)
   # ===========================================================================
   dashboard:
     build:
       context: ../dashboard
       dockerfile: Dockerfile
       args:
-        - VITE_API_URL=${VITE_API_URL:-http://localhost:8000}
-        - VITE_WS_URL=${VITE_WS_URL:-ws://localhost:8000/ws}
+        # localhost URLs - accessed via SSH tunnel
+        - VITE_API_URL=http://localhost:8000
+        - VITE_WS_URL=ws://localhost:8000/ws
     container_name: meridian-dashboard
+    # Localhost-only port binding
     ports:
-      - "3000:80"
+      - "127.0.0.1:3000:80"
     depends_on:
       - api
     healthcheck:
@@ -87,13 +95,13 @@ services:
         max-file: "2"
 
   # ===========================================================================
-  # Redis (Optional - for caching/sessions)
+  # Redis (Optional - localhost-only)
   # ===========================================================================
   redis:
     image: redis:7-alpine
     container_name: meridian-redis
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     volumes:
       - redis-data:/data
     command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru

@@ -1,54 +1,167 @@
-# MERIDIAN Deployment Guide - Local/DGX Single-User
+# MERIDIAN Deployment Guide - Self-Hosted (Secure by Default)
+
+## Security Posture
+
+Services bind to **localhost only** on the DGX. Access from your MacBook via **SSH tunnel**.
+
+This protects against:
+- ❌ Accidental LAN exposure
+- ❌ Fat-finger port forwarding mistakes
+- ❌ DHCP IP changes breaking bookmarks
+
+---
 
 ## Quick Start
 
-For single-user local or DGX deployment, the system is ready to use with minimal setup:
+### 1. First-time setup on DGX
 
 ```bash
-# 1. Configure environment
+ssh gibsonv32@spark-ad77
+cd /home/gibsonv32/dev/meridian
+
+# Create and secure .env
 cp .env.example .env
-# Edit .env with your API keys
-
-# 2. Run deployment script
-./deploy-local.sh
-
-# 3. Start API server
-meridian api start
-# Or with custom settings:
-meridian api start --host 127.0.0.1 --port 8000 --workers 2 --timeout 600
+chmod 600 .env
+nano .env  # Add your ANTHROPIC_API_KEY
 ```
 
-## What's Been Hardened
+### 2. Deploy from MacBook
 
-### Security & Reliability
-- ✅ Default to localhost (127.0.0.1) instead of 0.0.0.0
-- ✅ Environment variable configuration support
-- ✅ Request logging and monitoring
-- ✅ Graceful shutdown handling (SIGTERM/SIGINT)
-- ✅ Configurable CORS origins
-- ✅ Resource limits and timeouts
-
-### Configuration (.env)
 ```bash
-# Core settings
-API_HOST=127.0.0.1  # Localhost only by default
-API_PORT=8000
-LOG_LEVEL=INFO
+cd /path/to/meridianpathfinder/try
 
-# LLM Configuration
-ANTHROPIC_API_KEY=your-key-here
+# Full deploy (sync + start)
+./deploy/deploy-to-spark.sh
 
-# Resource limits
-REQUEST_TIMEOUT=300
-MAX_CONCURRENT_MODES=1
+# Or step by step:
+./deploy/deploy-to-spark.sh --sync    # Sync code
+./deploy/deploy-to-spark.sh --start   # Start services
+./deploy/deploy-to-spark.sh --status  # Check status
 ```
 
-## Running as a Service (Optional)
-
-For always-on deployment on DGX or workstation:
+### 3. Access via SSH tunnel
 
 ```bash
-# Install systemd service
+# Open tunnel (runs in foreground)
+./deploy/deploy-to-spark.sh --tunnel
+
+# Or manually:
+ssh -L 3000:localhost:3000 -L 8000:localhost:8000 gibsonv32@spark-ad77
+```
+
+Then open in browser:
+- **Dashboard**: http://localhost:3000
+- **API Docs**: http://localhost:8000/docs
+- **Health**: http://localhost:8000/health
+
+---
+
+## Deploy Script Commands
+
+| Command | Description |
+|---------|-------------|
+| `./deploy/deploy-to-spark.sh` | Full deploy (sync + start + status) |
+| `--sync`, `-s` | Sync code to DGX only |
+| `--start` | Start Docker services |
+| `--stop` | Stop Docker services |
+| `--status` | Check container status & security |
+| `--health`, `-H` | Detailed health check of all endpoints |
+| `--logs`, `-l` | Tail container logs |
+| `--tunnel`, `-t` | Open SSH tunnel for browser access |
+
+---
+
+## Self-Hosted Hardening Checklist
+
+- [x] Services bind to localhost (`127.0.0.1:port` in docker-compose)
+- [x] Access via SSH tunnels from MacBook
+- [x] `.env` stays local on DGX, never synced back (`chmod 600`)
+- [x] Docker containers auto-restart (`restart: unless-stopped`)
+- [x] Health/logs/status commands in deploy script
+
+---
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                  DGX Spark (spark-ad77)                     │
+│              All services bound to 127.0.0.1                │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  ┌─────────────────┐       ┌─────────────────────────────┐ │
+│  │ SGLang Container│       │     Meridian API            │ │
+│  │ gpt-oss-120b    │◄──────│     127.0.0.1:8000          │ │
+│  │ 127.0.0.1:30000 │       └─────────────────────────────┘ │
+│  └─────────────────┘                 │                      │
+│                                      │ Mode 5 only          │
+│                                      ▼                      │
+│                            ┌─────────────────┐             │
+│                            │ Anthropic API   │             │
+│                            │ Claude Opus 4.5 │             │
+│                            └─────────────────┘             │
+│                                                             │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │         Dashboard: 127.0.0.1:3000                    │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                                                             │
+└──────────────────────────┬──────────────────────────────────┘
+                           │ SSH Tunnel
+                           │ -L 3000:localhost:3000
+                           │ -L 8000:localhost:8000
+                           ▼
+                 ┌─────────────────┐
+                 │    MacBook      │
+                 │  localhost:3000 │
+                 │  localhost:8000 │
+                 └─────────────────┘
+```
+
+---
+
+## LLM Configuration
+
+| Task | Model | Endpoint |
+|------|-------|----------|
+| **Reasoning** (Modes 0-4, 6-7) | gpt-oss-120b | SGLang @ localhost:30000 |
+| **Code Generation** (Mode 5) | Claude Opus 4.5 | Anthropic API |
+
+---
+
+## Troubleshooting
+
+```bash
+# Check if services are running
+./deploy/deploy-to-spark.sh --status
+
+# Detailed health check
+./deploy/deploy-to-spark.sh --health
+
+# View logs
+./deploy/deploy-to-spark.sh --logs
+
+# Restart services
+./deploy/deploy-to-spark.sh --stop
+./deploy/deploy-to-spark.sh --start
+```
+
+### Common Issues
+
+| Issue | Solution |
+|-------|----------|
+| Can't connect to localhost:3000 | Open SSH tunnel first: `./deploy/deploy-to-spark.sh --tunnel` |
+| SGLang not running | `docker start sglang-gpt-oss` on DGX |
+| .env not found | Copy from .env.example and configure |
+| Permission denied on .env | `chmod 600 .env` |
+
+---
+
+## Running as Systemd Service (Optional)
+
+For always-on deployment:
+
+```bash
+# On DGX
 sudo cp meridian.service /etc/systemd/system/meridian@$USER.service
 sudo systemctl daemon-reload
 sudo systemctl enable meridian@$USER
@@ -56,58 +169,5 @@ sudo systemctl start meridian@$USER
 
 # Check status
 systemctl status meridian@$USER
-
-# View logs
 journalctl -u meridian@$USER -f
 ```
-
-## API Endpoints
-
-Access the API documentation at: http://localhost:8000/docs
-
-Key endpoints:
-- `GET /` - Health check
-- `POST /project/init` - Initialize project
-- `GET /project/status` - Get project status
-- `POST /mode/run` - Execute a mode
-- `GET /artifacts/list` - List artifacts
-- `POST /demo` - Run demo pipeline
-
-## Monitoring
-
-View logs in real-time:
-```bash
-# If running directly
-meridian api start 2>&1 | tee meridian.log
-
-# If running as service
-journalctl -u meridian@$USER -f
-```
-
-## Resource Management
-
-The deployment is configured with sensible defaults:
-- Single worker process (increase with `--workers` for more throughput)
-- 300s request timeout (adjust with `--timeout`)
-- Logging to stdout/stderr (captured by systemd if using service)
-
-## Troubleshooting
-
-1. **Port already in use**: Change port in .env or use `--port` flag
-2. **Permission denied**: Ensure user has write access to data/ and .meridian/
-3. **API key errors**: Check .env file has correct ANTHROPIC_API_KEY
-4. **Out of memory**: Reduce concurrent modes in .env
-
-## For Production Cloud Deployment
-
-If you need multi-user cloud deployment later, see PRODUCTION_CHECKLIST.md for:
-- Database backend (PostgreSQL)
-- Authentication (JWT/OAuth2)
-- Container orchestration (Kubernetes)
-- Advanced monitoring (Prometheus/Grafana)
-
-The current setup is perfectly suitable for:
-- Single-user research workstations
-- DGX development environments
-- Local testing and development
-- Private network deployments

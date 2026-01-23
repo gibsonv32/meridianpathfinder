@@ -3,9 +3,10 @@ project:
   version: 0.1.0
   description: 'MERIDIAN project: DataQualityTest'
 llm:
-  # PRIMARY: gpt-oss-120b on Spark for all reasoning tasks
+  # PRIMARY: gpt-oss-120b on DGX Spark via SGLang
   provider: openai
-  base_url: http://127.0.0.1:30000/v1
+  # Use Docker bridge gateway when running in Docker, localhost when running directly
+  base_url: ${OPENAI_API_BASE_URL:-http://127.0.0.1:30000/v1}
   model: openai/gpt-oss-120b
   api_key: not-needed
   temperature: 0.3
