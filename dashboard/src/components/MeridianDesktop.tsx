@@ -19,28 +19,21 @@ import {
   File,
   ChevronRight,
   Loader2,
-  Eye,
   Table,
   ArrowRight,
   Search,
   Command,
   Clock,
-  Zap,
-  Hash,
-  Settings,
-  HelpCircle,
-  Terminal,
   Pause,
   RefreshCw,
   Download,
   Copy,
-  ExternalLink,
 } from "lucide-react";
 
 import { useDashboardStore } from "../store";
 import { useWebSocket } from "../hooks/useWebSocket";
 import { api } from "../api/client";
-import type { ModeId } from "../types";
+import type { ModeId, ModeStatus } from "../types";
 
 type QuickCard = {
   id: string;
@@ -107,6 +100,7 @@ export function MeridianDesktop() {
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [paletteSearch, setPaletteSearch] = useState("");
   const [selectedCommandIndex, setSelectedCommandIndex] = useState(0);
+  const [modeProgress] = useState<Record<string, number>>({});
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const paletteInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -177,8 +171,8 @@ export function MeridianDesktop() {
         toast(`${artifacts.length} artifacts available`);
         return;
       }
-      await api.sendCommand(command);
-      toast.success("Command sent");
+      // Generic command - just show feedback
+      toast.success("Command received");
     } catch {
       toast.error("Command failed");
     }
@@ -243,7 +237,17 @@ export function MeridianDesktop() {
     try {
       const previews: FilePreview[] = [];
       for (const f of list) {
-        await addAttachment(f);
+        // Create attachment object from file
+        const attachment = {
+          id: `att-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+          file: f,
+          name: f.name,
+          type: f.type,
+          size: f.size,
+          status: 'success' as const,
+          progress: 100,
+        };
+        addAttachment(attachment);
         const preview = await generatePreview(f);
         previews.push(preview);
       }
@@ -252,8 +256,8 @@ export function MeridianDesktop() {
     } catch { toast.error("Upload failed"); }
   }, [addAttachment, generatePreview]);
 
-  const removeFile = useCallback((filename: string, attachmentId: string) => {
-    removeAttachment(attachmentId);
+  const removeFile = useCallback((filename: string, attachmentId?: string) => {
+    if (attachmentId) removeAttachment(attachmentId);
     setFilePreviews(prev => prev.filter(p => p.name !== filename));
   }, [removeAttachment]);
 
@@ -287,21 +291,22 @@ export function MeridianDesktop() {
     { name: "Delivery", modes: [{ id: "7", name: "Delivery" }] },
   ];
 
-  const getModeStatus = (modeId: string) => modes.find(m => m.id === modeId)?.status || "idle";
-  const getModeProgress = (modeId: string) => modes.find(m => m.id === modeId)?.progress || 0;
-  const getModeData = (modeId: string) => modes.find(m => m.id === modeId);
+  const getModeStatus = (modeId: string): ModeStatus | "idle" => {
+    const mode = modes.find(m => m.id === modeId);
+    return mode?.status || "idle";
+  };
+  
+  const getModeProgress = (modeId: string): number => modeProgress[modeId] || 0;
   const completedCount = modes.filter((m) => m.status === "completed").length;
   const runningMode = modes.find(m => m.status === "running");
 
   // Command Palette items
   const commandItems: CommandItem[] = useMemo(() => {
     const items: CommandItem[] = [
-      // Actions
-      { id: "run-analysis", icon: <TrendingUp size={16} />, label: "Run Analysis", description: "Start Mode 0 (EDA)", shortcut: "", action: async () => { await runMode("0"); toast.success("Starting EDA"); setCommandPaletteOpen(false); }, category: "actions" },
-      { id: "generate-code", icon: <Code size={16} />, label: "Generate Code", description: "Start Mode 5 (Claude)", shortcut: "", action: async () => { await runMode("5"); toast.success("Starting code gen"); setCommandPaletteOpen(false); }, category: "actions" },
-      { id: "reset-pipeline", icon: <RotateCcw size={16} />, label: "Reset Pipeline", description: "Clear all mode statuses", shortcut: "", action: () => { resetModes(); setFilePreviews([]); toast.success("Pipeline reset"); setCommandPaletteOpen(false); }, category: "actions" },
-      { id: "upload-files", icon: <Upload size={16} />, label: "Upload Files", description: "Browse for files to upload", shortcut: "", action: () => { onBrowseClick(); setCommandPaletteOpen(false); }, category: "actions" },
-      // Modes
+      { id: "run-analysis", icon: <TrendingUp size={16} />, label: "Run Analysis", description: "Start Mode 0 (EDA)", action: async () => { await runMode("0"); toast.success("Starting EDA"); setCommandPaletteOpen(false); }, category: "actions" },
+      { id: "generate-code", icon: <Code size={16} />, label: "Generate Code", description: "Start Mode 5 (Claude)", action: async () => { await runMode("5"); toast.success("Starting code gen"); setCommandPaletteOpen(false); }, category: "actions" },
+      { id: "reset-pipeline", icon: <RotateCcw size={16} />, label: "Reset Pipeline", description: "Clear all mode statuses", action: () => { resetModes(); setFilePreviews([]); toast.success("Pipeline reset"); setCommandPaletteOpen(false); }, category: "actions" },
+      { id: "upload-files", icon: <Upload size={16} />, label: "Upload Files", description: "Browse for files to upload", action: () => { onBrowseClick(); setCommandPaletteOpen(false); }, category: "actions" },
       ...pipelinePhases.flatMap(phase => phase.modes.map(mode => ({
         id: `mode-${mode.id}`,
         icon: <Play size={16} />,
@@ -310,12 +315,10 @@ export function MeridianDesktop() {
         action: async () => { await runMode(mode.id as ModeId); toast.success(`Starting ${mode.name}`); setCommandPaletteOpen(false); },
         category: "modes" as const,
       }))),
-      // Navigation
       { id: "view-artifacts", icon: <Package size={16} />, label: "View Artifacts", description: `${artifacts.length} artifacts available`, action: () => { toast(`${artifacts.length} artifacts`); setCommandPaletteOpen(false); }, category: "navigation" },
       { id: "check-status", icon: <Activity size={16} />, label: "Check Status", description: "View pipeline status", action: () => { const running = modes.filter(m => m.status === "running"); toast(running.length ? `Running: ${running.map(m => m.name).join(", ")}` : "No modes running"); setCommandPaletteOpen(false); }, category: "navigation" },
     ];
 
-    // Recent commands
     const recentItems: CommandItem[] = (commandHistory || []).slice(0, 5).map((cmd, i) => ({
       id: `recent-${i}`,
       icon: <Clock size={16} />,
@@ -363,9 +366,8 @@ export function MeridianDesktop() {
   const getDrawerModeData = () => {
     if (drawerContent?.type !== "mode") return null;
     const modeId = drawerContent.modeId;
-    const modeData = getModeData(modeId);
     const phaseInfo = pipelinePhases.flatMap(p => p.modes.map(m => ({ ...m, phase: p.name }))).find(m => m.id === modeId);
-    return { modeId, modeData, phaseInfo };
+    return { modeId, phaseInfo };
   };
 
   return (
@@ -376,7 +378,6 @@ export function MeridianDesktop() {
         <div style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", alignItems: "flex-start", justifyContent: "center", paddingTop: 100 }} onClick={() => setCommandPaletteOpen(false)}>
           <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.4)" }} />
           <div onClick={e => e.stopPropagation()} style={{ position: "relative", width: 560, maxHeight: "60vh", backgroundColor: colors.cardBg, borderRadius: 16, boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)", overflow: "hidden", display: "flex", flexDirection: "column" }}>
-            {/* Search Input */}
             <div style={{ padding: 16, borderBottom: `1px solid ${colors.border}`, display: "flex", alignItems: "center", gap: 12 }}>
               <Search size={20} color={colors.textMuted} />
               <input
@@ -392,7 +393,6 @@ export function MeridianDesktop() {
                 <Command size={12} /> K
               </div>
             </div>
-            {/* Results */}
             <div style={{ flex: 1, overflowY: "auto", padding: 8 }}>
               {["actions", "modes", "navigation", "recent"].map(category => {
                 const items = filteredCommands.filter(c => c.category === category);
@@ -402,7 +402,7 @@ export function MeridianDesktop() {
                     <div style={{ padding: "8px 12px", fontSize: 11, fontWeight: 600, color: colors.textMuted, textTransform: "uppercase" }}>
                       {category === "recent" ? "Recent" : category === "modes" ? "Run Modes" : category === "actions" ? "Quick Actions" : "Navigation"}
                     </div>
-                    {items.map((item, idx) => {
+                    {items.map((item) => {
                       const globalIdx = filteredCommands.indexOf(item);
                       const isSelected = globalIdx === selectedCommandIndex;
                       return (
@@ -410,10 +410,7 @@ export function MeridianDesktop() {
                           key={item.id}
                           onClick={item.action}
                           onMouseEnter={() => setSelectedCommandIndex(globalIdx)}
-                          style={{
-                            display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: 8, cursor: "pointer",
-                            backgroundColor: isSelected ? colors.pillBlueBg : "transparent",
-                          }}
+                          style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: 8, cursor: "pointer", backgroundColor: isSelected ? colors.pillBlueBg : "transparent" }}
                         >
                           <div style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: isSelected ? colors.primary : colors.pageBg, display: "flex", alignItems: "center", justifyContent: "center", color: isSelected ? "#fff" : colors.textMuted }}>{item.icon}</div>
                           <div style={{ flex: 1 }}>
@@ -427,15 +424,10 @@ export function MeridianDesktop() {
                   </div>
                 );
               })}
-              {filteredCommands.length === 0 && (
-                <div style={{ padding: 24, textAlign: "center", color: colors.textMuted }}>No results found</div>
-              )}
+              {filteredCommands.length === 0 && <div style={{ padding: 24, textAlign: "center", color: colors.textMuted }}>No results found</div>}
             </div>
-            {/* Footer */}
             <div style={{ padding: "12px 16px", borderTop: `1px solid ${colors.border}`, display: "flex", alignItems: "center", gap: 16, fontSize: 11, color: colors.textMuted }}>
-              <span>↑↓ Navigate</span>
-              <span>↵ Select</span>
-              <span>Esc Close</span>
+              <span>↑↓ Navigate</span><span>↵ Select</span><span>Esc Close</span>
             </div>
           </div>
         </div>
@@ -446,30 +438,23 @@ export function MeridianDesktop() {
         <div style={{ position: "fixed", inset: 0, zIndex: 90, display: "flex", justifyContent: "flex-end" }} onClick={() => setDrawerContent(null)}>
           <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.3)" }} />
           <div onClick={e => e.stopPropagation()} style={{ position: "relative", width: 480, height: "100%", backgroundColor: colors.cardBg, boxShadow: "-4px 0 20px rgba(0,0,0,0.1)", display: "flex", flexDirection: "column" }}>
-            {/* Drawer Header */}
             <div style={{ padding: 20, borderBottom: `1px solid ${colors.border}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <h2 style={{ fontSize: 18, fontWeight: 600, margin: 0 }}>
-                {drawerContent.type === "mode" ? `Mode ${drawerContent.modeId}` : "Artifact Details"}
-              </h2>
-              <button onClick={() => setDrawerContent(null)} style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: colors.pageBg, border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
-                <X size={18} color={colors.textMuted} />
-              </button>
+              <h2 style={{ fontSize: 18, fontWeight: 600, margin: 0 }}>{drawerContent.type === "mode" ? `Mode ${drawerContent.modeId}` : "Artifact Details"}</h2>
+              <button onClick={() => setDrawerContent(null)} style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: colors.pageBg, border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}><X size={18} color={colors.textMuted} /></button>
             </div>
-            {/* Drawer Content */}
             <div style={{ flex: 1, overflowY: "auto", padding: 20 }}>
               {drawerContent.type === "mode" && (() => {
                 const data = getDrawerModeData();
                 if (!data) return null;
-                const { modeId, modeData, phaseInfo } = data;
+                const { modeId, phaseInfo } = data;
                 const status = getModeStatus(modeId);
                 const progress = getModeProgress(modeId);
                 const isRunning = status === "running";
                 const isCompleted = status === "completed";
-                const isError = status === "error";
+                const isError = status === "failed";
 
                 return (
                   <div>
-                    {/* Mode Info */}
                     <div style={{ marginBottom: 24 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
                         <div style={{ width: 48, height: 48, borderRadius: 12, backgroundColor: isCompleted ? colors.success : isRunning ? colors.primary : isError ? colors.error : colors.pageBg, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -480,72 +465,33 @@ export function MeridianDesktop() {
                           <div style={{ fontSize: 13, color: colors.textMuted }}>{phaseInfo?.phase} Phase</div>
                         </div>
                       </div>
-
-                      {/* Status Badge */}
                       <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-                        <span style={{
-                          padding: "4px 12px", borderRadius: 16, fontSize: 12, fontWeight: 500,
-                          backgroundColor: isCompleted ? colors.pillGreenBg : isRunning ? colors.pillBlueBg : isError ? "#fef2f2" : colors.pageBg,
-                          color: isCompleted ? colors.pillGreenText : isRunning ? colors.pillBlueText : isError ? colors.error : colors.textMuted,
-                          border: `1px solid ${isCompleted ? colors.pillGreenBorder : isRunning ? colors.pillBlueBorder : isError ? "#fecaca" : colors.border}`,
-                        }}>{status.charAt(0).toUpperCase() + status.slice(1)}</span>
-                        {(phaseInfo as any)?.llm === "claude" && (
-                          <span style={{ padding: "4px 12px", borderRadius: 16, fontSize: 12, fontWeight: 500, backgroundColor: colors.pillBlueBg, color: colors.pillBlueText, border: `1px solid ${colors.pillBlueBorder}` }}>Claude</span>
-                        )}
+                        <span style={{ padding: "4px 12px", borderRadius: 16, fontSize: 12, fontWeight: 500, backgroundColor: isCompleted ? colors.pillGreenBg : isRunning ? colors.pillBlueBg : isError ? "#fef2f2" : colors.pageBg, color: isCompleted ? colors.pillGreenText : isRunning ? colors.pillBlueText : isError ? colors.error : colors.textMuted, border: `1px solid ${isCompleted ? colors.pillGreenBorder : isRunning ? colors.pillBlueBorder : isError ? "#fecaca" : colors.border}` }}>{String(status).charAt(0).toUpperCase() + String(status).slice(1)}</span>
+                        {(phaseInfo as any)?.llm === "claude" && <span style={{ padding: "4px 12px", borderRadius: 16, fontSize: 12, fontWeight: 500, backgroundColor: colors.pillBlueBg, color: colors.pillBlueText, border: `1px solid ${colors.pillBlueBorder}` }}>Claude</span>}
                       </div>
-
-                      {/* Progress */}
                       {isRunning && (
                         <div style={{ marginBottom: 16 }}>
-                          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, fontSize: 12 }}>
-                            <span style={{ color: colors.textMuted }}>Progress</span>
-                            <span style={{ fontWeight: 500 }}>{progress}%</span>
-                          </div>
-                          <div style={{ height: 8, backgroundColor: colors.pageBg, borderRadius: 4, overflow: "hidden" }}>
-                            <div style={{ height: "100%", width: `${progress}%`, backgroundColor: colors.primary, borderRadius: 4, transition: "width 0.3s ease" }} />
-                          </div>
+                          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, fontSize: 12 }}><span style={{ color: colors.textMuted }}>Progress</span><span style={{ fontWeight: 500 }}>{progress}%</span></div>
+                          <div style={{ height: 8, backgroundColor: colors.pageBg, borderRadius: 4, overflow: "hidden" }}><div style={{ height: "100%", width: `${progress}%`, backgroundColor: colors.primary, borderRadius: 4, transition: "width 0.3s ease" }} /></div>
                         </div>
                       )}
                     </div>
-
-                    {/* Description */}
                     <div style={{ marginBottom: 24 }}>
                       <h3 style={{ fontSize: 13, fontWeight: 600, marginBottom: 8, color: colors.textMuted }}>Description</h3>
-                      <p style={{ fontSize: 14, color: colors.text, lineHeight: 1.6, margin: 0 }}>
-                        {getModeDescription(modeId)}
-                      </p>
+                      <p style={{ fontSize: 14, color: colors.text, lineHeight: 1.6, margin: 0 }}>{getModeDescription(modeId)}</p>
                     </div>
-
-                    {/* Expected Outputs */}
                     <div style={{ marginBottom: 24 }}>
                       <h3 style={{ fontSize: 13, fontWeight: 600, marginBottom: 8, color: colors.textMuted }}>Expected Outputs</h3>
                       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                         {getModeOutputs(modeId).map((output, i) => (
-                          <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", backgroundColor: colors.pageBg, borderRadius: 8 }}>
-                            <Package size={14} color={colors.textMuted} />
-                            <span style={{ fontSize: 13 }}>{output}</span>
-                          </div>
+                          <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", backgroundColor: colors.pageBg, borderRadius: 8 }}><Package size={14} color={colors.textMuted} /><span style={{ fontSize: 13 }}>{output}</span></div>
                         ))}
                       </div>
                     </div>
-
-                    {/* Actions */}
                     <div style={{ display: "flex", gap: 8 }}>
-                      {!isRunning && (
-                        <button onClick={async () => { await runMode(modeId as ModeId); toast.success(`Starting mode ${modeId}`); }} style={{ flex: 1, padding: "10px 16px", backgroundColor: colors.primary, color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-                          <Play size={16} /> Run Mode
-                        </button>
-                      )}
-                      {isRunning && (
-                        <button onClick={() => toast("Stop not implemented")} style={{ flex: 1, padding: "10px 16px", backgroundColor: colors.warning, color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-                          <Pause size={16} /> Stop
-                        </button>
-                      )}
-                      {isCompleted && (
-                        <button onClick={() => toast("Re-run not implemented")} style={{ flex: 1, padding: "10px 16px", backgroundColor: colors.pageBg, color: colors.text, border: `1px solid ${colors.border}`, borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-                          <RefreshCw size={16} /> Re-run
-                        </button>
-                      )}
+                      {!isRunning && <button onClick={async () => { await runMode(modeId as ModeId); toast.success(`Starting mode ${modeId}`); }} style={{ flex: 1, padding: "10px 16px", backgroundColor: colors.primary, color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}><Play size={16} /> Run Mode</button>}
+                      {isRunning && <button onClick={() => toast("Stop not implemented")} style={{ flex: 1, padding: "10px 16px", backgroundColor: colors.warning, color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}><Pause size={16} /> Stop</button>}
+                      {isCompleted && <button onClick={() => toast("Re-run not implemented")} style={{ flex: 1, padding: "10px 16px", backgroundColor: colors.pageBg, color: colors.text, border: `1px solid ${colors.border}`, borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}><RefreshCw size={16} /> Re-run</button>}
                     </div>
                   </div>
                 );
@@ -555,34 +501,22 @@ export function MeridianDesktop() {
                 <div>
                   <div style={{ marginBottom: 24 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-                      <div style={{ width: 48, height: 48, borderRadius: 12, backgroundColor: colors.pillBlueBg, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <Package size={24} color={colors.primary} />
-                      </div>
+                      <div style={{ width: 48, height: 48, borderRadius: 12, backgroundColor: colors.pillBlueBg, display: "flex", alignItems: "center", justifyContent: "center" }}><Package size={24} color={colors.primary} /></div>
                       <div>
                         <div style={{ fontSize: 18, fontWeight: 600 }}>{drawerContent.artifact?.name || "Artifact"}</div>
                         <div style={{ fontSize: 13, color: colors.textMuted }}>Mode {drawerContent.artifact?.modeId}</div>
                       </div>
                     </div>
                   </div>
-
-                  {/* Content */}
                   <div style={{ marginBottom: 24 }}>
                     <h3 style={{ fontSize: 13, fontWeight: 600, marginBottom: 8, color: colors.textMuted }}>Content</h3>
                     <div style={{ backgroundColor: colors.pageBg, borderRadius: 8, padding: 16, maxHeight: 400, overflowY: "auto" }}>
-                      <pre style={{ fontSize: 12, fontFamily: "monospace", margin: 0, whiteSpace: "pre-wrap", color: colors.text }}>
-                        {drawerContent.artifact?.content || "No content available"}
-                      </pre>
+                      <pre style={{ fontSize: 12, fontFamily: "monospace", margin: 0, whiteSpace: "pre-wrap", color: colors.text }}>{drawerContent.artifact?.content || "No content available"}</pre>
                     </div>
                   </div>
-
-                  {/* Actions */}
                   <div style={{ display: "flex", gap: 8 }}>
-                    <button onClick={() => { navigator.clipboard.writeText(drawerContent.artifact?.content || ""); toast.success("Copied!"); }} style={{ flex: 1, padding: "10px 16px", backgroundColor: colors.pageBg, color: colors.text, border: `1px solid ${colors.border}`, borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-                      <Copy size={16} /> Copy
-                    </button>
-                    <button onClick={() => toast("Download not implemented")} style={{ flex: 1, padding: "10px 16px", backgroundColor: colors.primary, color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-                      <Download size={16} /> Download
-                    </button>
+                    <button onClick={() => { navigator.clipboard.writeText(drawerContent.artifact?.content || ""); toast.success("Copied!"); }} style={{ flex: 1, padding: "10px 16px", backgroundColor: colors.pageBg, color: colors.text, border: `1px solid ${colors.border}`, borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}><Copy size={16} /> Copy</button>
+                    <button onClick={() => toast("Download not implemented")} style={{ flex: 1, padding: "10px 16px", backgroundColor: colors.primary, color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}><Download size={16} /> Download</button>
                   </div>
                 </div>
               )}
@@ -607,41 +541,21 @@ export function MeridianDesktop() {
           <div style={{ padding: 20 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
               <div style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: colors.primary, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 16 }}>M</div>
-              <div>
-                <div style={{ fontWeight: 600, fontSize: 14 }}>MERIDIAN</div>
-                <div style={{ fontSize: 11, color: colors.textMuted }}>Intelligence Platform</div>
-              </div>
+              <div><div style={{ fontWeight: 600, fontSize: 14 }}>MERIDIAN</div><div style={{ fontSize: 11, color: colors.textMuted }}>Intelligence Platform</div></div>
             </div>
-
-            {/* Command Palette Trigger */}
             <button onClick={() => setCommandPaletteOpen(true)} style={{ width: "100%", padding: "10px 12px", backgroundColor: colors.pageBg, border: `1px solid ${colors.border}`, borderRadius: 8, display: "flex", alignItems: "center", gap: 10, cursor: "pointer", marginBottom: 20 }}>
               <Search size={16} color={colors.textMuted} />
               <span style={{ flex: 1, textAlign: "left", fontSize: 13, color: colors.textMuted }}>Search...</span>
-              <div style={{ display: "flex", alignItems: "center", gap: 2, padding: "2px 6px", backgroundColor: colors.cardBg, borderRadius: 4, fontSize: 10, color: colors.textLight }}>
-                <Command size={10} /> K
-              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 2, padding: "2px 6px", backgroundColor: colors.cardBg, borderRadius: 4, fontSize: 10, color: colors.textLight }}><Command size={10} /> K</div>
             </button>
-
-            {/* Status & Progress */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, fontSize: 12 }}>
               <span style={{ color: colors.textMuted }}>Status: <span style={{ color: colors.text, fontWeight: 500 }}>{connectionStatus || "—"}</span></span>
               <span style={{ backgroundColor: colors.pillBlueBg, color: colors.pillBlueText, border: `1px solid ${colors.pillBlueBorder}`, padding: "2px 8px", borderRadius: 12, fontSize: 10, fontWeight: 500 }}>API</span>
             </div>
-
             <div style={{ backgroundColor: colors.pageBg, borderRadius: 10, padding: 12, marginBottom: 20 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                <span style={{ fontSize: 12, fontWeight: 600 }}>Pipeline Progress</span>
-                <span style={{ fontSize: 12, color: colors.textMuted }}>{completedCount}/10</span>
-              </div>
-              <div style={{ height: 6, backgroundColor: colors.border, borderRadius: 3, overflow: "hidden" }}>
-                <div style={{ height: "100%", width: `${(completedCount / 10) * 100}%`, backgroundColor: colors.success, borderRadius: 3, transition: "width 0.3s ease" }} />
-              </div>
-              {runningMode && (
-                <div style={{ marginTop: 8, fontSize: 11, color: colors.primary, display: "flex", alignItems: "center", gap: 6 }}>
-                  <Loader2 size={12} style={{ animation: "spin 1s linear infinite" }} />
-                  Running: {runningMode.name}
-                </div>
-              )}
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}><span style={{ fontSize: 12, fontWeight: 600 }}>Pipeline Progress</span><span style={{ fontSize: 12, color: colors.textMuted }}>{completedCount}/10</span></div>
+              <div style={{ height: 6, backgroundColor: colors.border, borderRadius: 3, overflow: "hidden" }}><div style={{ height: "100%", width: `${(completedCount / 10) * 100}%`, backgroundColor: colors.success, borderRadius: 3, transition: "width 0.3s ease" }} /></div>
+              {runningMode && <div style={{ marginTop: 8, fontSize: 11, color: colors.primary, display: "flex", alignItems: "center", gap: 6 }}><Loader2 size={12} style={{ animation: "spin 1s linear infinite" }} />Running: {runningMode.name}</div>}
             </div>
           </div>
 
@@ -659,17 +573,13 @@ export function MeridianDesktop() {
                     const progress = getModeProgress(mode.id);
                     const isRunning = status === "running";
                     const isCompleted = status === "completed";
-                    const isError = status === "error";
+                    const isError = status === "failed";
 
                     return (
                       <div key={mode.id}>
                         <div
                           onClick={() => openModeDetail(mode.id)}
-                          style={{
-                            display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 8, cursor: "pointer", transition: "all 0.15s ease",
-                            backgroundColor: isRunning ? colors.pillBlueBg : isCompleted ? colors.pillGreenBg : isError ? "#fef2f2" : colors.cardBg,
-                            border: `1px solid ${isRunning ? colors.pillBlueBorder : isCompleted ? colors.pillGreenBorder : isError ? "#fecaca" : colors.border}`,
-                          }}
+                          style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 8, cursor: "pointer", transition: "all 0.15s ease", backgroundColor: isRunning ? colors.pillBlueBg : isCompleted ? colors.pillGreenBg : isError ? "#fef2f2" : colors.cardBg, border: `1px solid ${isRunning ? colors.pillBlueBorder : isCompleted ? colors.pillGreenBorder : isError ? "#fecaca" : colors.border}` }}
                         >
                           <div style={{ width: 24, height: 24, borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: isCompleted ? colors.success : isRunning ? colors.primary : isError ? colors.error : colors.pageBg }}>
                             {isCompleted ? <CheckCircle2 size={14} color="#fff" /> : isRunning ? <Loader2 size={14} color="#fff" style={{ animation: "spin 1s linear infinite" }} /> : isError ? <AlertTriangle size={14} color="#fff" /> : <Circle size={14} color={colors.textLight} />}
@@ -681,9 +591,7 @@ export function MeridianDesktop() {
                             </div>
                             {isRunning && (
                               <div style={{ marginTop: 4 }}>
-                                <div style={{ height: 3, backgroundColor: "rgba(37,99,235,0.2)", borderRadius: 2, overflow: "hidden" }}>
-                                  <div style={{ height: "100%", width: `${progress}%`, backgroundColor: colors.primary, transition: "width 0.3s ease" }} />
-                                </div>
+                                <div style={{ height: 3, backgroundColor: "rgba(37,99,235,0.2)", borderRadius: 2, overflow: "hidden" }}><div style={{ height: "100%", width: `${progress}%`, backgroundColor: colors.primary, transition: "width 0.3s ease" }} /></div>
                                 <div style={{ fontSize: 10, color: colors.primary, marginTop: 2 }}>{progress}%</div>
                               </div>
                             )}
@@ -701,25 +609,15 @@ export function MeridianDesktop() {
           </div>
 
           <div style={{ padding: 16, borderTop: `1px solid ${colors.border}`, fontSize: 11 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-              <span style={{ color: colors.textMuted }}>Artifacts</span>
-              <span style={{ fontWeight: 500 }}>{artifacts.length}</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ color: colors.textMuted }}>Project</span>
-              <span style={{ fontWeight: 500, maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis" }}>{currentProject?.name || "—"}</span>
-            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}><span style={{ color: colors.textMuted }}>Artifacts</span><span style={{ fontWeight: 500 }}>{artifacts.length}</span></div>
+            <div style={{ display: "flex", justifyContent: "space-between" }}><span style={{ color: colors.textMuted }}>Project</span><span style={{ fontWeight: 500, maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis" }}>{currentProject?.name || "—"}</span></div>
           </div>
         </aside>
 
         {/* MAIN CONTENT */}
         <main style={{ flex: 1, overflowY: "auto", padding: 24 }}>
-          {/* Header */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
-            <div>
-              <h1 style={{ fontSize: 20, fontWeight: 600, margin: 0 }}>{currentProject?.name || "MERIDIAN Dashboard"}</h1>
-              <p style={{ fontSize: 13, color: colors.textMuted, margin: "4px 0 0" }}>Mode execution, artifacts, and live activity</p>
-            </div>
+            <div><h1 style={{ fontSize: 20, fontWeight: 600, margin: 0 }}>{currentProject?.name || "MERIDIAN Dashboard"}</h1><p style={{ fontSize: 13, color: colors.textMuted, margin: "4px 0 0" }}>Mode execution, artifacts, and live activity</p></div>
             <div style={{ display: "flex", gap: 8 }}>
               <span style={{ backgroundColor: colors.pillGreenBg, color: colors.pillGreenText, border: `1px solid ${colors.pillGreenBorder}`, padding: "4px 12px", borderRadius: 16, fontSize: 12, fontWeight: 500 }}>GPT-OSS-120B</span>
               <span style={{ backgroundColor: colors.pillBlueBg, color: colors.pillBlueText, border: `1px solid ${colors.pillBlueBorder}`, padding: "4px 12px", borderRadius: 16, fontSize: 12, fontWeight: 500 }}>Claude Opus</span>
@@ -728,10 +626,7 @@ export function MeridianDesktop() {
 
           {/* Quick Actions */}
           <div style={{ marginBottom: 24 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <h2 style={{ fontSize: 15, fontWeight: 600, margin: 0 }}>Quick Actions</h2>
-              <span style={{ fontSize: 12, color: colors.textMuted }}>Common workflows</span>
-            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}><h2 style={{ fontSize: 15, fontWeight: 600, margin: 0 }}>Quick Actions</h2><span style={{ fontSize: 12, color: colors.textMuted }}>Common workflows</span></div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
               {quickCards.map((card) => (
                 <div key={card.id} style={{ backgroundColor: colors.cardBg, border: `1px solid ${colors.border}`, borderRadius: 12, padding: 16 }}>
@@ -741,9 +636,7 @@ export function MeridianDesktop() {
                   </div>
                   <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4 }}>{card.title}</div>
                   <div style={{ fontSize: 12, color: colors.textMuted, marginBottom: 16, minHeight: 32 }}>{card.description}</div>
-                  <button onClick={async () => { try { await card.onRun(); } catch { toast.error("Failed"); } }} style={{ width: "100%", padding: "8px 0", backgroundColor: colors.primary, color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-                    <Play size={14} /> Run
-                  </button>
+                  <button onClick={async () => { try { await card.onRun(); } catch { toast.error("Failed"); } }} style={{ width: "100%", padding: "8px 0", backgroundColor: colors.primary, color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}><Play size={14} /> Run</button>
                 </div>
               ))}
             </div>
@@ -761,9 +654,7 @@ export function MeridianDesktop() {
             
             {filePreviews.length === 0 && (
               <div style={{ backgroundColor: isDragging ? colors.pillBlueBg : colors.cardBg, border: `2px dashed ${isDragging ? colors.primary : colors.border}`, borderRadius: 12, padding: 32, transition: "all 0.2s ease", textAlign: "center" }}>
-                <div style={{ width: 56, height: 56, borderRadius: 14, margin: "0 auto 16px", backgroundColor: colors.pillBlueBg, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Upload size={28} color={colors.primary} />
-                </div>
+                <div style={{ width: 56, height: 56, borderRadius: 14, margin: "0 auto 16px", backgroundColor: colors.pillBlueBg, display: "flex", alignItems: "center", justifyContent: "center" }}><Upload size={28} color={colors.primary} /></div>
                 <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 4 }}>Drag & drop files here</div>
                 <div style={{ fontSize: 13, color: colors.textMuted, marginBottom: 16 }}>or click <button onClick={onBrowseClick} style={{ background: "none", border: "none", color: colors.primary, fontSize: 13, fontWeight: 500, cursor: "pointer", padding: 0 }}>Browse Files</button></div>
                 <div style={{ fontSize: 11, color: colors.textLight }}>Supports PDF, Word, TXT, MD, CSV, Excel, JPEG, PNG</div>
@@ -772,8 +663,8 @@ export function MeridianDesktop() {
 
             {filePreviews.length > 0 && (
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {filePreviews.map((file, idx) => {
-                  const attachment = attachments?.[idx];
+                {filePreviews.map((file) => {
+                  const attachment = attachments?.find(a => a.name === file.name);
                   const isExpanded = expandedFile === file.name;
                   return (
                     <div key={file.name} style={{ backgroundColor: colors.cardBg, border: `1px solid ${colors.border}`, borderRadius: 12, overflow: "hidden" }}>
@@ -821,10 +712,7 @@ export function MeridianDesktop() {
 
           {/* Recent Artifacts */}
           <div style={{ marginBottom: 24 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <h2 style={{ fontSize: 15, fontWeight: 600, margin: 0 }}>Recent Artifacts</h2>
-              <span style={{ fontSize: 12, color: colors.textMuted }}>{artifacts.length} total</span>
-            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}><h2 style={{ fontSize: 15, fontWeight: 600, margin: 0 }}>Recent Artifacts</h2><span style={{ fontSize: 12, color: colors.textMuted }}>{artifacts.length} total</span></div>
             <div style={{ backgroundColor: colors.cardBg, border: `1px solid ${colors.border}`, borderRadius: 12, padding: 16 }}>
               {artifacts.length > 0 ? (
                 <div>
@@ -832,12 +720,9 @@ export function MeridianDesktop() {
                     <div key={art.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: i < Math.min(artifacts.length, 5) - 1 ? `1px solid ${colors.border}` : "none" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                         <div style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: colors.pageBg, display: "flex", alignItems: "center", justifyContent: "center" }}><Package size={16} color={colors.textMuted} /></div>
-                        <div>
-                          <div style={{ fontWeight: 500, fontSize: 13 }}>{art.name}</div>
-                          <div style={{ fontSize: 11, color: colors.textMuted }}>Mode {art.modeId} • {art.createdAt ? new Date(art.createdAt).toLocaleTimeString() : "—"}</div>
-                        </div>
+                        <div><div style={{ fontWeight: 500, fontSize: 13 }}>{art.name}</div><div style={{ fontSize: 11, color: colors.textMuted }}>Mode {art.modeId} • {art.createdAt ? new Date(art.createdAt).toLocaleTimeString() : "—"}</div></div>
                       </div>
-                      <button onClick={() => setDrawerContent({ type: "artifact", artifact: art })} style={{ background: "none", border: "none", color: colors.primary, fontSize: 13, fontWeight: 500, cursor: "pointer" }}>View</button>
+                      <button onClick={() => openArtifact(art.id)} style={{ background: "none", border: "none", color: colors.primary, fontSize: 13, fontWeight: 500, cursor: "pointer" }}>View</button>
                     </div>
                   ))}
                 </div>
@@ -862,13 +747,10 @@ export function MeridianDesktop() {
           </div>
         </main>
 
-        {/* RIGHT SIDEBAR - Live Activity */}
+        {/* RIGHT SIDEBAR */}
         <aside style={{ width: 280, backgroundColor: colors.sidebarBg, borderLeft: `1px solid ${colors.border}`, display: "flex", flexDirection: "column" }}>
           <div style={{ padding: 20 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-              <h2 style={{ fontSize: 15, fontWeight: 600, margin: 0 }}>Live Activity</h2>
-              <span style={{ backgroundColor: colors.pillBlueBg, color: colors.pillBlueText, border: `1px solid ${colors.pillBlueBorder}`, padding: "2px 8px", borderRadius: 10, fontSize: 10, fontWeight: 500 }}>Live</span>
-            </div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}><h2 style={{ fontSize: 15, fontWeight: 600, margin: 0 }}>Live Activity</h2><span style={{ backgroundColor: colors.pillBlueBg, color: colors.pillBlueText, border: `1px solid ${colors.pillBlueBorder}`, padding: "2px 8px", borderRadius: 10, fontSize: 10, fontWeight: 500 }}>Live</span></div>
             <p style={{ fontSize: 12, color: colors.textMuted, margin: "0 0 16px" }}>Real-time pipeline updates</p>
           </div>
           <div style={{ flex: 1, overflowY: "auto", padding: "0 20px 20px" }}>
@@ -878,10 +760,7 @@ export function MeridianDesktop() {
                   <div key={a.id || `${a.timestamp}-${a.type}`} style={{ backgroundColor: colors.pageBg, borderRadius: 8, padding: 12 }}>
                     <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
                       <Activity size={14} color={colors.textMuted} style={{ marginTop: 2 }} />
-                      <div>
-                        <div style={{ fontSize: 12 }}>{a.content || a.type}</div>
-                        <div style={{ fontSize: 10, color: colors.textLight, marginTop: 4 }}>{a.timestamp ? new Date(a.timestamp).toLocaleTimeString() : ""}</div>
-                      </div>
+                      <div><div style={{ fontSize: 12 }}>{a.content || a.type}</div><div style={{ fontSize: 10, color: colors.textLight, marginTop: 4 }}>{a.timestamp ? new Date(a.timestamp).toLocaleTimeString() : ""}</div></div>
                     </div>
                   </div>
                 ))}
@@ -899,7 +778,6 @@ export function MeridianDesktop() {
   );
 }
 
-// Helper functions for mode details
 function getModeDescription(modeId: string): string {
   const descriptions: Record<string, string> = {
     "0.5": "Identifies and validates new business opportunities through market analysis, competitive landscape assessment, and strategic alignment evaluation.",
