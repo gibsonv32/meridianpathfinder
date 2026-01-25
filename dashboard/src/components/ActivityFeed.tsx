@@ -15,6 +15,7 @@ import {
   XCircle,
   Loader2,
   Sparkles,
+  Trash2,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { formatDistanceToNow } from 'date-fns';
@@ -23,9 +24,15 @@ import type { ActivityItem, ToolExecution, ToolStatus } from '../types';
 import toast from 'react-hot-toast';
 
 export function ActivityFeed() {
-  const activities = useDashboardStore((s) => s.activities);
+  const allActivities = useDashboardStore((s) => s.activities);
+  const clearActivities = useDashboardStore((s) => s.clearActivities);
   const feedRef = useRef<HTMLDivElement>(null);
   const [autoScroll, setAutoScroll] = useState(true);
+
+  // Filter out noise like "Connected to project" messages
+  const activities = allActivities.filter(
+    (a) => !a.content?.toLowerCase().includes('connected to project')
+  );
 
   // Auto-scroll to bottom when new activities arrive
   useEffect(() => {
@@ -40,23 +47,43 @@ export function ActivityFeed() {
     setAutoScroll(scrollTop < 50);
   };
 
+  const handleClear = () => {
+    clearActivities();
+    toast.success('Activity feed cleared');
+  };
+
   if (activities.length === 0) {
     return <EmptyState />;
   }
 
   return (
-    <div
-      ref={feedRef}
-      onScroll={handleScroll}
-      className="h-full overflow-y-auto px-6 py-4 space-y-3"
-    >
-      {activities.map((activity, index) => (
-        <ActivityItemCard
-          key={activity.id}
-          activity={activity}
-          isFirst={index === 0}
-        />
-      ))}
+    <div className="h-full flex flex-col">
+      {/* Header with clear button */}
+      <div className="flex items-center justify-between px-6 py-3 border-b border-border-subtle">
+        <h2 className="text-sm font-medium text-text-secondary">Activity Feed</h2>
+        <button
+          onClick={handleClear}
+          className="btn btn-icon btn-ghost text-text-muted hover:text-text-primary"
+          title="Clear all activities"
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
+      </div>
+      
+      {/* Activity list */}
+      <div
+        ref={feedRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto px-6 py-4 space-y-3"
+      >
+        {activities.map((activity, index) => (
+          <ActivityItemCard
+            key={activity.id}
+            activity={activity}
+            isFirst={index === 0}
+          />
+        ))}
+      </div>
     </div>
   );
 }

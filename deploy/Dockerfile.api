@@ -19,7 +19,7 @@ RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 ENV PATH="/root/.local/bin:$PATH"
 
 # Copy dependency files
-COPY pyproject.toml uv.lock* ./
+COPY pyproject.toml uv.lock* README.md ./
 COPY meridian ./meridian/
 
 # Create virtual environment and install dependencies
@@ -27,7 +27,7 @@ RUN uv venv /opt/venv
 ENV VIRTUAL_ENV=/opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 RUN uv pip install --no-cache -e ".[dev]"
-RUN uv pip install --no-cache websockets httpx pydantic-settings
+RUN uv pip install --no-cache websockets httpx pydantic-settings uvicorn[standard] fastapi
 
 # -----------------------------------------------------------------------------
 # Production stage
@@ -49,7 +49,7 @@ ENV PATH="/opt/venv/bin:$PATH"
 # Copy application code
 COPY meridian ./meridian/
 COPY deploy/llm_router.py ./meridian/llm/router.py
-COPY pyproject.toml ./
+COPY pyproject.toml README.md ./
 
 # Create directories for runtime
 RUN mkdir -p /app/artifacts /app/logs /app/data /app/workspace

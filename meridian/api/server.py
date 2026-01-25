@@ -384,11 +384,8 @@ async def websocket_endpoint(websocket: WebSocket):
     await ws_manager.connect(websocket)
     
     try:
-        # Send initial connection confirmation
-        await ws_manager.send_to(websocket, "connected", {
-            "message": "Connected to MERIDIAN API",
-            "server_time": datetime.now(timezone.utc).isoformat()
-        })
+        # Connection established - no need to send a message
+        # Connection status is already shown in the dashboard header
         
         # Listen for incoming messages
         while True:

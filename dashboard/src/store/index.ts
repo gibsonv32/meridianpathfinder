@@ -31,6 +31,7 @@ interface DashboardState {
   modes: ModeInfo[];
   setModes: (modes: ModeInfo[]) => void;
   updateMode: (modeId: ModeId, updates: Partial<ModeInfo>) => void;
+  resetModes: () => void;
 
   // Activity Feed
   activities: ActivityItem[];
@@ -118,6 +119,7 @@ export const useDashboardStore = create<DashboardState>()(
           m.id === modeId ? { ...m, ...updates } : m
         ),
       })),
+    resetModes: () => set({ modes: createInitialModes() }),
 
     // Activity Feed
     activities: [],

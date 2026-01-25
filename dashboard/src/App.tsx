@@ -1,7 +1,13 @@
 import { useEffect, useCallback } from 'react';
 import { Toaster } from 'react-hot-toast';
 import toast from 'react-hot-toast';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Layout } from './components/Layout';
+import { MeridianDesktop } from './components/MeridianDesktop';
+import { MeridianV2 } from './components/MeridianV2';
+import { MeridianV3 } from './components/MeridianV3';
+import { MeridianV4 } from './components/MeridianV4';
+import { MeridianPro } from './components/MeridianPro';
 import { useDashboardStore } from './store';
 import { useWebSocket } from './hooks/useWebSocket';
 import { api } from './api/client';
@@ -22,10 +28,8 @@ export function App() {
   // Load initial data from API
   const loadProjectData = useCallback(async () => {
     try {
-      // Get project path from env or use current directory
-      const projectPath = (import.meta as any).env?.VITE_PROJECT_PATH || 
-        window.location.pathname.replace('/dashboard', '') || 
-        '.';
+      // Get project path from env or use DGX default
+      const projectPath = import.meta.env.VITE_PROJECT_PATH || "/home/gibsonv32/dev/meridian";
       
       api.setProjectPath(projectPath);
       
@@ -84,32 +88,15 @@ export function App() {
       
       setArtifacts(artifacts);
       
-      // Add system activity
-      addActivity({
-        id: crypto.randomUUID(),
-        type: 'system_notice',
-        timestamp: new Date().toISOString(),
-        content: `Connected to project: ${status.project_name}`,
-        severity: 'info',
-      });
-      
-      toast.success(`Connected to ${status.project_name}`);
+      // Connection status is shown in header - no toast needed
       
     } catch (error) {
       console.error('Failed to load project data:', error);
       setConnectionStatus('offline');
       
-      // Add error activity
-      addActivity({
-        id: crypto.randomUUID(),
-        type: 'system_notice',
-        timestamp: new Date().toISOString(),
-        content: `Failed to connect to backend: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        severity: 'warning',
-      });
-      
-      // Still show the dashboard but in demo mode
-      toast.error('Running in demo mode - backend unavailable');
+      // Show error in toast only - connection status is shown in header
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      toast.error(`Backend unavailable: ${errorMessage}`);
     }
   }, [setConnectionStatus, setCurrentProject, setModes, setArtifacts, addActivity]);
 
@@ -119,33 +106,45 @@ export function App() {
   }, [loadProjectData]);
 
   return (
-    <>
-      <Layout />
-      <Toaster
-        position="bottom-right"
-        toastOptions={{
-          className: 'toast-container',
-          style: {
-            background: '#1f1f1f',
-            color: '#f5f5f5',
-            border: '1px solid #333333',
-            borderRadius: '8px',
-            fontSize: '14px',
-          },
-          success: {
-            iconTheme: {
-              primary: '#22c55e',
-              secondary: '#1f1f1f',
+    <BrowserRouter>
+      <div className="relative">
+        
+        <Routes>
+          <Route path="/classic" element={<Layout />} />
+          <Route path="/desktop" element={<MeridianDesktop />} />
+          <Route path="/v2" element={<MeridianV2 />} />
+          <Route path="/v3" element={<MeridianV3 />} />
+          <Route path="/v4" element={<MeridianV4 />} />
+          <Route path="/pro" element={<MeridianPro />} />
+          <Route path="/" element={<Navigate to="/desktop" replace />} />
+        </Routes>
+        
+        <Toaster
+          position="bottom-right"
+          toastOptions={{
+            className: 'toast-container',
+            style: {
+              background: '#1f1f1f',
+              color: '#f5f5f5',
+              border: '1px solid #333333',
+              borderRadius: '8px',
+              fontSize: '14px',
             },
-          },
-          error: {
-            iconTheme: {
-              primary: '#ef4444',
-              secondary: '#1f1f1f',
+            success: {
+              iconTheme: {
+                primary: '#22c55e',
+                secondary: '#1f1f1f',
+              },
             },
-          },
-        }}
-      />
-    </>
+            error: {
+              iconTheme: {
+                primary: '#ef4444',
+                secondary: '#1f1f1f',
+              },
+            },
+          }}
+        />
+      </div>
+    </BrowserRouter>
   );
 }

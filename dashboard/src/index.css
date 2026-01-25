@@ -479,3 +479,237 @@
 .glow-purple {
   box-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
 }
+
+/* =============================================================================
+   MERIDIAN V2 - Industrial Dark Steel Aesthetic
+   ============================================================================= */
+
+.carbon-fiber {
+  background: linear-gradient(45deg, #1a1c1e 25%, transparent 25%),
+    linear-gradient(-45deg, #1a1c1e 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #1a1c1e 75%),
+    linear-gradient(-45deg, transparent 75%, #1a1c1e 75%);
+  background-size: 4px 4px;
+  background-position: 0 0, 2px 0, 2px -2px, 0px 2px;
+  background-color: #121416;
+}
+
+.metal-panel {
+  background: linear-gradient(180deg, #32363b 0%, #282c30 100%);
+  border: 1px solid #3d4247;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), inset 0 -1px 0 rgba(0,0,0,0.3), 0 2px 8px rgba(0,0,0,0.4);
+}
+
+.metal-panel-dark {
+  background: linear-gradient(180deg, #1e2124 0%, #18191c 100%);
+  border: 1px solid #2a2d31;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.03), inset 0 -1px 0 rgba(0,0,0,0.5), 0 4px 12px rgba(0,0,0,0.5);
+}
+
+.metal-inset {
+  background: linear-gradient(180deg, #1a1c1e 0%, #222426 100%);
+  border: 1px solid #151618;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);
+}
+
+/* Model-specific glows */
+.glow-gpt { 
+  box-shadow: 0 0 20px rgba(74, 222, 128, 0.15), inset 0 1px 0 rgba(255,255,255,0.05); 
+}
+.glow-gpt:hover { 
+  box-shadow: 0 0 30px rgba(74, 222, 128, 0.25), inset 0 1px 0 rgba(255,255,255,0.08); 
+}
+.glow-claude { 
+  box-shadow: 0 0 20px rgba(34, 211, 238, 0.15), inset 0 1px 0 rgba(255,255,255,0.05); 
+}
+.glow-claude:hover { 
+  box-shadow: 0 0 30px rgba(34, 211, 238, 0.25), inset 0 1px 0 rgba(255,255,255,0.08); 
+}
+.glow-hybrid { 
+  box-shadow: 0 0 20px rgba(251, 146, 60, 0.15), inset 0 1px 0 rgba(255,255,255,0.05); 
+}
+.glow-hybrid:hover { 
+  box-shadow: 0 0 30px rgba(251, 146, 60, 0.25), inset 0 1px 0 rgba(255,255,255,0.08); 
+}
+
+.led-glow { 
+  box-shadow: 0 0 6px currentColor, 0 0 12px currentColor; 
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 1; box-shadow: 0 0 4px currentColor; }
+  50% { opacity: 0.7; box-shadow: 0 0 8px currentColor, 0 0 16px currentColor; }
+}
+.led-pulse { 
+  animation: pulse-glow 2s ease-in-out infinite; 
+}
+
+.progress-striped {
+  background-image: linear-gradient(45deg, rgba(255,255,255,0.1) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.1) 75%, transparent 75%, transparent);
+  background-size: 40px 40px;
+  animation: progress-stripe 1s linear infinite;
+}
+
+@keyframes progress-stripe { 
+  0% { background-position: 0 0; } 
+  100% { background-position: 40px 0; } 
+}
+
+.mode-card .actions { 
+  opacity: 0; 
+  transition: opacity 0.2s ease; 
+}
+.mode-card:hover .actions { 
+  opacity: 1; 
+}
+
+/* =============================================================================
+   Accessibility: Reduced Motion
+   ============================================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .animate-spin {
+    animation: none !important;
+  }
+
+  .animate-pulse {
+    animation: none !important;
+  }
+
+  .animate-bounce {
+    animation: none !important;
+  }
+
+  .hover-lift:hover {
+    transform: none !important;
+  }
+}
+
+/* =============================================================================
+   Additional Animations for Enhanced UX
+   ============================================================================= */
+
+/* Stagger animation for list items */
+@keyframes stagger-in {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-stagger-in {
+  animation: stagger-in 0.3s ease-out forwards;
+}
+
+/* Animation delay utilities for staggering */
+.stagger-1 { animation-delay: 50ms; }
+.stagger-2 { animation-delay: 100ms; }
+.stagger-3 { animation-delay: 150ms; }
+.stagger-4 { animation-delay: 200ms; }
+.stagger-5 { animation-delay: 250ms; }
+.stagger-6 { animation-delay: 300ms; }
+.stagger-7 { animation-delay: 350ms; }
+.stagger-8 { animation-delay: 400ms; }
+.stagger-9 { animation-delay: 450ms; }
+.stagger-10 { animation-delay: 500ms; }
+
+/* Status pulse for running states */
+@keyframes status-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-status-pulse {
+  animation: status-pulse 2s ease-in-out infinite;
+}
+
+/* Shake animation for errors */
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-4px);
+  }
+  75% {
+    transform: translateX(4px);
+  }
+}
+
+.animate-shake {
+  animation: shake 0.4s ease-in-out;
+}
+
+/* Elevated shadows */
+.shadow-elevated-sm {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.shadow-elevated-md {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.shadow-elevated-lg {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+/* Glow on hover */
+.glow-on-hover {
+  transition: box-shadow 0.2s ease;
+}
+
+.glow-on-hover:hover {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+}
+
+/* Success flash */
+@keyframes success-flash {
+  0% {
+    background-color: rgba(34, 197, 94, 0.3);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+.animate-success-flash {
+  animation: success-flash 1s ease-out;
+}
+
+/* Highlight animation for search results */
+@keyframes highlight-fade {
+  0% {
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.6);
+  }
+  100% {
+    box-shadow: 0 0 0 2px transparent;
+  }
+}
+
+.animate-highlight {
+  animation: highlight-fade 2s ease-out;
+}
+
+/* Transition defaults */
+.transition-default {
+  transition-property: color, background-color, border-color, box-shadow, transform;
+  transition-duration: 150ms;
+  transition-timing-function: ease-out;
+}

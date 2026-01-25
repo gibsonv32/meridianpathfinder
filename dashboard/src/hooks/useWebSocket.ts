@@ -8,7 +8,7 @@ const MAX_RECONNECT_ATTEMPTS = 10;
 
 // Get project path from env or default
 const getProjectPath = () => {
-  return (import.meta as any).env?.VITE_PROJECT_PATH || '.';
+  return (import.meta as any).env?.VITE_PROJECT_PATH || '/home/gibsonv32/dev/meridian';
 };
 
 export function useWebSocket() {
@@ -81,15 +81,10 @@ export function useWebSocket() {
 
     switch (event.type) {
       case 'connected': {
-        // Server confirmed connection
+        // Server confirmed connection - handled silently
+        // Connection status is shown in the header, no need for activity log
         const payload = event.payload as { message: string };
-        addActivity({
-          id: crypto.randomUUID(),
-          type: 'system_notice',
-          timestamp: event.timestamp,
-          content: payload.message,
-          severity: 'info',
-        });
+        console.log('[WS] Connected:', payload.message);
         break;
       }
 

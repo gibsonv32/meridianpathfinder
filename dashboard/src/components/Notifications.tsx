@@ -122,10 +122,10 @@ export function NotificationCenter() {
           {/* Backdrop */}
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
 
-          {/* Panel */}
-          <div className="absolute right-0 top-full mt-2 w-96 bg-bg-secondary border border-border rounded-xl shadow-2xl z-50 overflow-hidden animate-fade-in">
+          {/* Panel - Fixed positioning to ensure full visibility */}
+          <div className="fixed right-4 top-16 w-96 max-h-[calc(100vh-5rem)] bg-bg-secondary border border-border rounded-xl shadow-2xl z-50 overflow-hidden animate-fade-in flex flex-col">
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-border-subtle">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border-subtle flex-shrink-0">
               <h3 className="font-semibold">Notifications</h3>
               <div className="flex items-center gap-2">
                 {unreadCount > 0 && (
@@ -146,7 +146,7 @@ export function NotificationCenter() {
             </div>
 
             {/* Notification List */}
-            <div className="max-h-96 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto">
               {notifications.length === 0 ? (
                 <div className="p-8 text-center text-text-muted">
                   <BellOff className="w-8 h-8 mx-auto mb-2 opacity-50" />
@@ -166,7 +166,7 @@ export function NotificationCenter() {
             </div>
 
             {/* Footer - Notification Settings */}
-            <div className="px-4 py-3 border-t border-border-subtle bg-bg-tertiary">
+            <div className="px-4 py-3 border-t border-border-subtle bg-bg-tertiary flex-shrink-0">
               <div className="text-xs text-text-muted mb-2">Notify me when complete:</div>
               <div className="flex flex-wrap gap-1">
                 {['0', '1', '2', '3', '4', '5', '6', '7'].map((modeId) => (
@@ -200,7 +200,7 @@ function NotificationItem({
   onRead: () => void;
 }) {
   const Icon = getNotificationIcon(notification.type);
-  const iconColor = getNotificationColor(notification.type);
+  const { bg, text } = getNotificationColors(notification.type);
 
   return (
     <div
@@ -211,18 +211,18 @@ function NotificationItem({
         'hover:bg-bg-hover'
       )}
     >
-      <div className={clsx('w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0', `bg-${iconColor}/10`)}>
-        <Icon className={clsx('w-4 h-4', `text-${iconColor}`)} />
+      <div className={clsx('w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0', bg)}>
+        <Icon className={clsx('w-4 h-4', text)} />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className="font-medium text-sm">{notification.title}</span>
+          <span className="font-medium text-sm text-text-primary">{notification.title}</span>
           {!notification.read && (
             <span className="w-2 h-2 rounded-full bg-accent-blue" />
           )}
         </div>
         {notification.message && (
-          <p className="text-sm text-text-secondary mt-0.5 truncate">
+          <p className="text-sm text-text-secondary mt-0.5">
             {notification.message}
           </p>
         )}
@@ -250,11 +250,11 @@ function getNotificationIcon(type: Notification['type']) {
   }
 }
 
-function getNotificationColor(type: Notification['type']) {
+function getNotificationColors(type: Notification['type']): { bg: string; text: string } {
   switch (type) {
-    case 'success': return 'status-success';
-    case 'error': return 'status-error';
-    case 'warning': return 'status-warning';
-    case 'info': return 'accent-blue';
+    case 'success': return { bg: 'bg-status-success/10', text: 'text-status-success' };
+    case 'error': return { bg: 'bg-status-error/10', text: 'text-status-error' };
+    case 'warning': return { bg: 'bg-status-warning/10', text: 'text-status-warning' };
+    case 'info': return { bg: 'bg-accent-blue/10', text: 'text-accent-blue' };
   }
 }

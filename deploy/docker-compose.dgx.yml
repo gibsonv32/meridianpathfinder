@@ -24,6 +24,9 @@ services:
     # Bridge network + localhost-only port binding (secure by default)
     ports:
       - "127.0.0.1:8000:8000"
+    # Load environment from .env file
+    env_file:
+      - ../.env
     # Connect to host services via extra_hosts
     extra_hosts:
       - "host.docker.internal:host-gateway"
@@ -76,6 +79,7 @@ services:
         # localhost URLs - accessed via SSH tunnel
         - VITE_API_URL=http://localhost:8000
         - VITE_WS_URL=ws://localhost:8000/ws
+        - VITE_PROJECT_PATH=/home/gibsonv32/dev/meridian
     container_name: meridian-dashboard
     # Localhost-only port binding
     ports:

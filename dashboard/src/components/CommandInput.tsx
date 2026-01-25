@@ -198,6 +198,21 @@ export function CommandInput() {
         toast.success('Activity feed cleared');
         break;
 
+      case 'reset':
+        // Reset pipeline status
+        useDashboardStore.getState().resetModes();
+        useDashboardStore.getState().clearActivities();
+        useDashboardStore.getState().setArtifacts([]);
+        toast.success('Pipeline reset to initial state');
+        addActivity({
+          id: crypto.randomUUID(),
+          type: 'system_notice',
+          timestamp: new Date().toISOString(),
+          content: 'Pipeline has been reset to initial state',
+          severity: 'info',
+        });
+        break;
+
       case 'help':
         addActivity({
           id: crypto.randomUUID(),
@@ -209,6 +224,7 @@ export function CommandInput() {
 /status        - Show project status
 /artifacts     - List artifacts
 /clear         - Clear activity feed
+/reset         - Reset pipeline to initial state
 /help          - Show this help
 
 Connection: ${isConnected ? '✓ Connected' : '✗ Offline (demo mode)'}`,

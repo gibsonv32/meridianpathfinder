@@ -16,11 +16,16 @@ import {
   WifiOff,
   Search,
   History,
+  Clock,
+  Activity,
 } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
 import clsx from 'clsx';
+import toast from 'react-hot-toast';
 import { useDashboardStore, selectPinnedActivities } from '../store';
 import { NotificationCenter } from './Notifications';
 import { RunHistory } from './RunHistory';
+import { RunQueue } from './RunQueue';
 import type { ModeInfo, ModeStatus } from '../types';
 
 export function Sidebar() {
@@ -35,10 +40,24 @@ export function Sidebar() {
   } = useDashboardStore();
   const pinnedActivities = useDashboardStore(selectPinnedActivities);
   const [showRunHistory, setShowRunHistory] = useState(false);
+  const [showRunQueue, setShowRunQueue] = useState(false);
+
+  // Calculate run queue stats
+  const runningCount = modes.filter((m) => m.status === 'running').length;
+  const completedCount = modes.filter((m) => m.status === 'completed').length;
 
   return (
     <>
     {showRunHistory && <RunHistory onClose={() => setShowRunHistory(false)} />}
+    {showRunQueue && (
+      <>
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30"
+          onClick={() => setShowRunQueue(false)}
+        />
+        <RunQueue onClose={() => setShowRunQueue(false)} className="fixed inset-y-0 right-0 w-96 z-40" />
+      </>
+    )}
     <aside
       className={clsx(
         'flex flex-col bg-bg-secondary border-r border-border-subtle',
@@ -50,8 +69,12 @@ export function Sidebar() {
       <div className="p-4 border-b border-border-subtle">
         <div className="flex items-center justify-between">
           <div className={clsx('flex items-center gap-2', sidebarCollapsed && 'justify-center')}>
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center hover-lift">
+            <div className="relative w-8 h-8 rounded-lg bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center hover-lift">
               <span className="text-white font-bold text-sm">M</span>
+              {/* Running indicator */}
+              {runningCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-status-running rounded-full animate-pulse" />
+              )}
             </div>
             {!sidebarCollapsed && (
               <div className="min-w-0">
@@ -64,6 +87,25 @@ export function Sidebar() {
           </div>
           {!sidebarCollapsed && (
             <div className="flex items-center gap-1">
+              {/* Run Queue Badge */}
+              {runningCount > 0 && (
+                <div className="flex items-center gap-1 px-2 py-1 bg-status-running/20 rounded-md">
+                  <Activity className="w-3 h-3 text-status-running animate-pulse" />
+                  <span className="text-xs text-status-running font-medium">{runningCount}</span>
+                </div>
+              )}
+              <button
+                onClick={() => setShowRunQueue(true)}
+                className="btn btn-icon btn-ghost relative"
+                title="Run Queue"
+              >
+                <Activity className="w-4 h-4" />
+                {runningCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-status-running text-white text-2xs rounded-full flex items-center justify-center">
+                    {runningCount}
+                  </span>
+                )}
+              </button>
               <button
                 onClick={() => setShowRunHistory(true)}
                 className="btn btn-icon btn-ghost"
@@ -75,6 +117,22 @@ export function Sidebar() {
             </div>
           )}
         </div>
+
+        {/* Progress bar */}
+        {!sidebarCollapsed && completedCount > 0 && (
+          <div className="mt-3">
+            <div className="flex justify-between text-xs text-text-muted mb-1">
+              <span>Progress</span>
+              <span>{completedCount}/{modes.length}</span>
+            </div>
+            <div className="h-1.5 bg-bg-tertiary rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-accent-blue to-accent-purple transition-all duration-500"
+                style={{ width: `${(completedCount / modes.length) * 100}%` }}
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Search Button */}
@@ -197,6 +255,9 @@ function PanelTab({
 
 function PipelinePanel({ modes, collapsed }: { modes: ModeInfo[]; collapsed: boolean }) {
   const [expandedModes, setExpandedModes] = useState<Set<string>>(new Set());
+  const resetModes = useDashboardStore((s) => s.resetModes);
+  const clearActivities = useDashboardStore((s) => s.clearActivities);
+  const setArtifacts = useDashboardStore((s) => s.setArtifacts);
 
   const toggleExpand = (modeId: string) => {
     setExpandedModes((prev) => {
@@ -210,8 +271,27 @@ function PipelinePanel({ modes, collapsed }: { modes: ModeInfo[]; collapsed: boo
     });
   };
 
+  const handleReset = () => {
+    resetModes();
+    clearActivities();
+    setArtifacts([]);
+    toast.success('Pipeline reset to initial state');
+  };
+
   return (
     <div className="p-2">
+      {!collapsed && (
+        <div className="flex items-center justify-between mb-3 px-2 py-1 bg-bg-tertiary rounded-md">
+          <span className="text-xs font-medium text-text-secondary">Pipeline Status</span>
+          <button
+            onClick={handleReset}
+            className="p-1 rounded hover:bg-bg-hover transition-colors text-text-muted hover:text-text-primary"
+            title="Reset pipeline to initial state"
+          >
+            <RotateCcw className="w-4 h-4" />
+          </button>
+        </div>
+      )}
       {modes.map((mode, index) => (
         <ModeItem
           key={mode.id}
@@ -222,6 +302,15 @@ function PipelinePanel({ modes, collapsed }: { modes: ModeInfo[]; collapsed: boo
           collapsed={collapsed}
         />
       ))}
+      {!collapsed && (
+        <button
+          onClick={handleReset}
+          className="w-full mt-2 px-3 py-2 text-sm bg-bg-tertiary hover:bg-bg-hover rounded-md transition-colors flex items-center justify-center gap-2 text-text-secondary hover:text-text-primary"
+        >
+          <RotateCcw className="w-4 h-4" />
+          Reset Pipeline
+        </button>
+      )}
     </div>
   );
 }
@@ -245,12 +334,24 @@ function ModeItem({
     return (
       <div
         className={clsx(
-          'flex items-center justify-center p-2 rounded-md mb-1 cursor-pointer',
-          'hover:bg-bg-hover transition-colors'
+          'relative flex items-center justify-center p-2 rounded-md mb-1 cursor-pointer',
+          'hover:bg-bg-hover transition-colors',
+          mode.status === 'running' && 'ring-1 ring-status-running'
         )}
-        title={`Mode ${mode.id}: ${mode.name}`}
+        title={`Mode ${mode.id}: ${mode.name}${mode.verdict ? ` (${mode.verdict.toUpperCase()})` : ''}`}
       >
         <StatusIcon className={clsx('w-5 h-5', statusColor)} />
+        {/* Verdict indicator dot */}
+        {mode.verdict && (
+          <span
+            className={clsx(
+              'absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full',
+              mode.verdict === 'go' && 'bg-status-success',
+              mode.verdict === 'conditional' && 'bg-status-warning',
+              mode.verdict === 'no_go' && 'bg-status-error'
+            )}
+          />
+        )}
       </div>
     );
   }
@@ -284,7 +385,28 @@ function ModeItem({
             <span className="font-medium text-sm">{mode.id}</span>
             <span className="text-text-secondary text-sm truncate">{mode.name}</span>
           </div>
+          {/* Last run time */}
+          {mode.lastRunAt && (
+            <div className="flex items-center gap-1 text-2xs text-text-muted mt-0.5">
+              <Clock className="w-3 h-3" />
+              {formatDistanceToNow(new Date(mode.lastRunAt), { addSuffix: true })}
+            </div>
+          )}
         </div>
+
+        {/* Verdict Badge */}
+        {mode.verdict && (
+          <span
+            className={clsx(
+              'text-2xs font-semibold px-1.5 py-0.5 rounded',
+              mode.verdict === 'go' && 'bg-status-success/20 text-status-success',
+              mode.verdict === 'conditional' && 'bg-status-warning/20 text-status-warning',
+              mode.verdict === 'no_go' && 'bg-status-error/20 text-status-error'
+            )}
+          >
+            {mode.verdict === 'go' ? 'GO' : mode.verdict === 'conditional' ? 'COND' : 'NO-GO'}
+          </span>
+        )}
 
         {/* Artifact Count */}
         {mode.artifactCount > 0 && (
@@ -346,40 +468,98 @@ function getStatusColor(status: ModeStatus) {
 function ArtifactsPanel({ collapsed }: { collapsed: boolean }) {
   const artifacts = useDashboardStore((s) => s.artifacts);
   const setSelectedArtifact = useDashboardStore((s) => s.setSelectedArtifact);
+  const [isDragOver, setIsDragOver] = useState(false);
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      // TODO: Handle document upload to library
+      toast.success(`Uploading ${files.length} document${files.length > 1 ? 's' : ''} to library...`);
+      console.log('Upload to document library:', files);
+    }
+  };
 
   if (collapsed) {
     return (
-      <div className="p-2 text-center text-text-muted">
+      <div 
+        className={clsx(
+          "p-2 text-center text-text-muted transition-colors",
+          isDragOver && "bg-accent-blue/10 text-accent-blue"
+        )}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
         <FileBox className="w-6 h-6 mx-auto opacity-50" />
       </div>
     );
   }
 
-  if (artifacts.length === 0) {
-    return (
-      <div className="p-4 text-center text-text-muted">
-        <FileBox className="w-8 h-8 mx-auto mb-2 opacity-50" />
-        <p className="text-sm">No artifacts yet</p>
-        <p className="text-xs mt-1">Run a mode to generate artifacts</p>
-      </div>
-    );
-  }
+  const hasArtifacts = artifacts.length > 0;
 
   return (
-    <div className="p-2 space-y-1">
-      {artifacts.map((artifact) => (
-        <button
-          key={artifact.id}
-          onClick={() => setSelectedArtifact(artifact as any)}
-          className="w-full text-left sidebar-item"
-        >
-          <FileBox className="w-4 h-4 text-text-tertiary flex-shrink-0" />
-          <div className="min-w-0">
-            <div className="text-sm truncate">{artifact.name}</div>
-            <div className="text-2xs text-text-muted">Mode {artifact.modeId}</div>
+    <div 
+      className={clsx(
+        "relative transition-colors",
+        isDragOver && "bg-accent-blue/5"
+      )}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      {/* Drop overlay for artifacts panel */}
+      {isDragOver && (
+        <div className="absolute inset-0 z-10 border-2 border-dashed border-accent-blue bg-accent-blue/10 flex items-center justify-center rounded-lg m-2">
+          <div className="text-center">
+            <FileBox className="w-8 h-8 mx-auto mb-2 text-accent-blue" />
+            <p className="text-sm font-medium text-accent-blue">Add to document library</p>
           </div>
-        </button>
-      ))}
+        </div>
+      )}
+
+      {!hasArtifacts ? (
+        <div className="p-4 text-center text-text-muted">
+          <FileBox className="w-8 h-8 mx-auto mb-2 opacity-50" />
+          <p className="text-sm">No artifacts yet</p>
+          <p className="text-xs mt-1">Run a mode to generate artifacts</p>
+          <div className="mt-3 pt-3 border-t border-border-subtle">
+            <p className="text-2xs text-text-muted">Drop documents here to add to library</p>
+          </div>
+        </div>
+      ) : (
+        <div className="p-2 space-y-1">
+          {/* Upload hint at top */}
+          <div className="px-2 py-1 mb-2 text-center">
+            <p className="text-2xs text-text-muted">Drop documents here to add to library</p>
+          </div>
+          
+          {artifacts.map((artifact) => (
+            <button
+              key={artifact.id}
+              onClick={() => setSelectedArtifact(artifact as any)}
+              className="w-full text-left sidebar-item"
+            >
+              <FileBox className="w-4 h-4 text-text-tertiary flex-shrink-0" />
+              <div className="min-w-0">
+                <div className="text-sm truncate">{artifact.name}</div>
+                <div className="text-2xs text-text-muted">Mode {artifact.modeId}</div>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

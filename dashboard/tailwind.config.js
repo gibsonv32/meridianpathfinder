@@ -61,6 +61,10 @@ export default {
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         'fade-in': 'fadeIn 0.2s ease-out',
         'slide-up': 'slideUp 0.2s ease-out',
+        'scale-in': 'scaleIn 0.15s ease-out',
+        'stagger-in': 'staggerIn 0.3s ease-out forwards',
+        'status-pulse': 'statusPulse 2s ease-in-out infinite',
+        'shake': 'shake 0.4s ease-in-out',
       },
       keyframes: {
         fadeIn: {
@@ -71,6 +75,31 @@ export default {
           '0%': { opacity: '0', transform: 'translateY(10px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
+        scaleIn: {
+          '0%': { transform: 'scale(0.95)', opacity: '0' },
+          '100%': { transform: 'scale(1)', opacity: '1' },
+        },
+        staggerIn: {
+          '0%': { opacity: '0', transform: 'translateY(8px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        statusPulse: {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0.5' },
+        },
+        shake: {
+          '0%, 100%': { transform: 'translateX(0)' },
+          '25%': { transform: 'translateX(-4px)' },
+          '75%': { transform: 'translateX(4px)' },
+        },
+      },
+      boxShadow: {
+        'elevated-sm': '0 2px 8px rgba(0, 0, 0, 0.3)',
+        'elevated-md': '0 4px 16px rgba(0, 0, 0, 0.4)',
+        'elevated-lg': '0 8px 32px rgba(0, 0, 0, 0.5)',
+        'glow-blue': '0 0 20px rgba(59, 130, 246, 0.3)',
+        'glow-green': '0 0 20px rgba(34, 197, 94, 0.25)',
+        'glow-accent': '0 0 20px rgba(217, 119, 87, 0.3)',
       },
     },
   },

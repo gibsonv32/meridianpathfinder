@@ -5,6 +5,11 @@ export { ActivityFeed } from './ActivityFeed';
 export { CommandInput } from './CommandInput';
 export { ArtifactViewer } from './ArtifactViewer';
 export { SearchModal } from './SearchModal';
+export { ContextDrawer } from './ContextDrawer';
+export { RunQueue } from './RunQueue';
+export { FileUpload } from './FileUpload';
+export { MeridianV2 } from './MeridianV2';
+export { MeridianV3 } from './MeridianV3';
 
 // Polish features
 export { RunHistory } from './RunHistory';

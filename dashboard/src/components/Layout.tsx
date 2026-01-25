@@ -1,16 +1,30 @@
+import { useEffect } from 'react';
 import { Sidebar } from './Sidebar';
 import { ActivityFeed } from './ActivityFeed';
 import { CommandInput } from './CommandInput';
-import { ArtifactViewer } from './ArtifactViewer';
+import { ContextDrawer } from './ContextDrawer';
 import { SearchModal } from './SearchModal';
 import { useDashboardStore } from '../store';
 
 export function Layout() {
-  const selectedArtifact = useDashboardStore((s) => s.selectedArtifact);
   const searchOpen = useDashboardStore((s) => s.searchOpen);
+  const setSearchOpen = useDashboardStore((s) => s.setSearchOpen);
+
+  // Cmd+K to open Command Palette
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [setSearchOpen]);
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-screen overflow-hidden bg-bg-primary">
       {/* Left Sidebar */}
       <Sidebar />
 
@@ -25,10 +39,10 @@ export function Layout() {
         <CommandInput />
       </div>
 
-      {/* Right Panel - Artifact Viewer (conditional) */}
-      {selectedArtifact && <ArtifactViewer />}
+      {/* Right Panel - Context Drawer (always visible, collapsed by default) */}
+      <ContextDrawer />
 
-      {/* Search Modal */}
+      {/* Command Palette / Search Modal (Cmd+K) */}
       {searchOpen && <SearchModal />}
     </div>
   );
