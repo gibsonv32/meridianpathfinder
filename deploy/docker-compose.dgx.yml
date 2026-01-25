@@ -1,0 +1,127 @@
+# =============================================================================
+# MERIDIAN Full Stack - DGX Spark Deployment (Self-Hosted / Secure by Default)
+# =============================================================================
+# Security posture: Localhost-only binding + SSH tunnel access from MacBook
+#
+# Access pattern:
+#   1. SSH tunnel: ssh -L 3000:localhost:3000 -L 8000:localhost:8000 gibsonv32@spark-ad77
+#   2. Open in browser: http://localhost:3000 (dashboard), http://localhost:8000/docs (API)
+#
+# This keeps all services inaccessible from LAN by default.
+# =============================================================================
+
+version: "3.9"
+
+services:
+  # ===========================================================================
+  # MERIDIAN API Server (localhost-only, bridge network)
+  # ===========================================================================
+  api:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.api
+    container_name: meridian-api
+    # Bridge network + localhost-only port binding (secure by default)
+    ports:
+      - "127.0.0.1:8000:8000"
+    # Load environment from .env file
+    env_file:
+      - ../.env
+    # Connect to host services via extra_hosts
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      # Mount project directory for dynamic project access
+      - ${PROJECT_PATH:-/home/gibsonv32/dev/meridian}:/app/workspace:ro
+      # Artifact storage on data volume
+      - /mnt/spark-data3/meridian/artifacts:/app/artifacts
+      # Logs
+      - /mnt/spark-data3/meridian/logs:/app/logs
+      # Data files
+      - /mnt/spark-data3/meridian/data:/app/data
+    environment:
+      # API Configuration - bind inside container to 0.0.0.0, but port only exposed to localhost
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      # CORS - localhost only (SSH tunnel access)
+      - CORS_ORIGINS=http://localhost:3000,http://localhost:8080
+      # LLM Configuration - SGLang via Docker bridge gateway
+      - OPENAI_API_BASE_URL=http://host.docker.internal:30000/v1
+      - OPENAI_API_KEY=not-needed
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - LLM_PROVIDER=openai
+      - LLM_MODEL=openai/gpt-oss-120b
+      # Project paths
+      - DEFAULT_PROJECT_PATH=/app/workspace
+      - ARTIFACT_PATH=/app/artifacts
+      - DATA_DIR=/mnt/spark-data3/meridian
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+
+  # ===========================================================================
+  # MERIDIAN Dashboard (localhost-only, SSH tunnel access)
+  # ===========================================================================
+  dashboard:
+    build:
+      context: ../dashboard
+      dockerfile: Dockerfile
+      args:
+        # localhost URLs - accessed via SSH tunnel
+        - VITE_API_URL=http://localhost:8000
+        - VITE_WS_URL=ws://localhost:8000/ws
+        - VITE_PROJECT_PATH=/home/gibsonv32/dev/meridian
+    container_name: meridian-dashboard
+    # Localhost-only port binding
+    ports:
+      - "127.0.0.1:3000:80"
+    depends_on:
+      - api
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "2"
+
+  # ===========================================================================
+  # Redis (Optional - localhost-only)
+  # ===========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: meridian-redis
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    profiles:
+      - with-cache
+
+networks:
+  default:
+    name: meridian-net
+    driver: bridge
+
+volumes:
+  redis-data:

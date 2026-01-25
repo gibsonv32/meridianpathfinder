@@ -1,0 +1,120 @@
+# MERIDIAN Configuration for DGX Spark Deployment
+# Copy this to your project as meridian.yaml
+# 
+# Infrastructure:
+#   - DGX Spark: spark-ad77 (192.168.68.74)
+#   - SGLang: gpt-oss-120b on port 30000
+#   - Claude Opus 4.5: For code generation (Mode 5)
+
+project:
+  name: meridian-dgx
+  version: 0.1.0
+  description: "MERIDIAN on DGX Spark with gpt-oss-120b + Claude Opus 4.5"
+
+# LLM Configuration - SGLang gpt-oss-120b as primary
+llm:
+  # PRIMARY: gpt-oss-120b via SGLang (OpenAI-compatible API)
+  provider: openai
+  base_url: ${OPENAI_API_BASE_URL:-http://127.0.0.1:30000/v1}
+  model: openai/gpt-oss-120b
+  api_key: not-needed  # SGLang doesn't require auth
+  
+  # Model parameters
+  temperature: 0.3
+  max_tokens: 8192
+  
+  # Enhanced intelligence features
+  intelligence:
+    enabled: true
+    memory: true
+    few_shot: true
+    optimization: true
+  
+  # Mode-specific overrides
+  mode_overrides:
+    mode_5:  # Code generation - use Claude Opus 4.5
+      provider: anthropic
+      model: claude-opus-4-20250514
+      temperature: 0.2  # More deterministic for code
+      max_tokens: 8192
+
+# Data Configuration
+data:
+  default_path: /mnt/spark-data3/meridian/data/
+  cache_enabled: true
+  # Large dataset support for DGX
+  chunk_size: 100000
+  use_dask: false  # Enable for datasets > 10GB
+
+# Artifact Storage
+artifacts:
+  # Store artifacts on high-speed NVMe data volume
+  base_path: /mnt/spark-data3/meridian/artifacts/
+  retention_days: 90
+  auto_verify: true
+  # Compression for large artifacts
+  compress: true
+  compression_level: 6
+
+# Execution Settings
+execution:
+  parallel_enabled: true
+  max_workers: 8  # DGX has 128 cores
+  timeout_seconds: 7200  # 2 hours for complex modes
+  # GPU settings
+  gpu_enabled: true
+  cuda_visible_devices: "0"  # RTX 6000 Ada
+
+# API Server Settings (for remote access)
+api:
+  host: 0.0.0.0  # Listen on all interfaces
+  port: 8000
+  workers: 4
+  timeout: 300
+  # Security
+  cors_origins:
+    - "http://localhost:3000"
+    - "http://localhost:8080"
+  # Rate limiting for production
+  rate_limit: 100  # requests per minute
+
+# Logging
+logging:
+  level: INFO
+  file: /mnt/spark-data3/meridian/logs/meridian.log
+  max_size_mb: 100
+  backup_count: 5
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+# Model Serving (vLLM/SGLang settings reference)
+# These are for documentation - actual serving is done separately
+model_serving:
+  # Fast model (Qwen-14B)
+  fast:
+    model_id: "Qwen/Qwen2.5-14B-Instruct"
+    port: 30001
+    tensor_parallel_size: 1
+    max_model_len: 32768
+    gpu_memory_utilization: 0.45
+    # EAGLE3 speculative decoding for 2-3x speedup
+    speculative_model: "EAGLE3-Qwen2.5-14B"
+    num_speculative_tokens: 5
+  
+  # Reasoning model (DeepSeek-70B)
+  reasoning:
+    model_id: "deepseek-ai/DeepSeek-R1-Distill-Llama-70B"
+    port: 30002
+    tensor_parallel_size: 1  # Fits in single GPU with quantization
+    max_model_len: 16384
+    gpu_memory_utilization: 0.50
+    quantization: "awq"  # 4-bit quantization for 70B
+
+# RAG Configuration (optional - for domain knowledge)
+rag:
+  enabled: false
+  vector_store: "faiss"
+  embedding_model: "sentence-transformers/all-MiniLM-L6-v2"
+  index_path: /mnt/spark-data3/meridian/rag/index/
+  documents_path: /mnt/spark-data3/meridian/rag/documents/
+  chunk_size: 512
+  chunk_overlap: 50

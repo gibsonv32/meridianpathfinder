@@ -37,24 +37,29 @@ class GateEnforcer:
         predecessor = MODE_DEPENDENCIES.get(target)
         if predecessor is not None:
             if not bool(getattr(self.project, "is_mode_complete")(predecessor)):
-                return GateResult(allowed=False, reason=f"Mode {predecessor.value} not complete", verdict=GateVerdict.BLOCKED)
+                return GateResult(
+                    allowed=False,
+                    reason=f"Mode {predecessor.value} not complete",
+                    verdict=GateVerdict.BLOCKED,
+                )
 
-            required_artifact = REQUIRED_ARTIFACTS.get(target)
-            if required_artifact:
-                artifact = getattr(self.project, "get_artifact")(required_artifact)
-                if not artifact:
-                    return GateResult(
-                        allowed=False,
-                        reason=f"Required artifact {required_artifact} not found",
-                        verdict=GateVerdict.BLOCKED,
-                    )
-                if not _artifact_validates(artifact):
-                    return GateResult(
-                        allowed=False,
-                        reason=f"Artifact {required_artifact} fails schema validation",
-                        verdict=GateVerdict.BLOCKED,
-                    )
+        required_artifact = REQUIRED_ARTIFACTS.get(target)
+        if required_artifact:
+            artifact = getattr(self.project, "get_artifact")(required_artifact)
+            if not artifact:
+                return GateResult(
+                    allowed=False,
+                    reason=f"Required artifact {required_artifact} not found",
+                    verdict=GateVerdict.BLOCKED,
+                )
+            if not _artifact_validates(artifact):
+                return GateResult(
+                    allowed=False,
+                    reason=f"Artifact {required_artifact} fails schema validation",
+                    verdict=GateVerdict.BLOCKED,
+                )
 
+        if predecessor is not None:
             verdict = getattr(self.project, "get_gate_verdict")(predecessor)
             if verdict == GateVerdict.BLOCKED:
                 return GateResult(

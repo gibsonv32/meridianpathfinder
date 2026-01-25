@@ -6,6 +6,7 @@ from time import perf_counter
 from typing import List, Optional, Tuple
 
 import pandas as pd
+import numpy as np
 
 from meridian.artifacts.schemas import Feature, FeatureRegistry, FeasibilityReport, ModelCandidate, ModelRecommendations
 from meridian.core.fingerprint import generate_fingerprint
@@ -13,6 +14,7 @@ from meridian.core.gates import GateVerdict
 from meridian.core.modes import Mode
 from meridian.core.state import MeridianProject
 from meridian.llm.providers import LLMProvider
+from meridian.data.feature_healer import FeatureHealer
 
 
 @dataclass
@@ -28,6 +30,7 @@ class Mode3Executor:
         data_path: Path,
         target_col: str,
         headless: bool = False,
+        self_heal: bool = True,
     ) -> Tuple[ModelRecommendations, FeatureRegistry]:
         t0 = perf_counter()
         self.project.start_mode(Mode.MODE_3)
@@ -38,11 +41,33 @@ class Mode3Executor:
             raise RuntimeError("Required artifact FeasibilityReport not found")
         feas = FeasibilityReport.from_file(m2_path)
 
-        df = pd.read_csv(Path(data_path).expanduser().resolve())
+        # Try self-healing CSV load if available
+        data_path = Path(data_path).expanduser().resolve()
+        if self.llm:
+            try:
+                from meridian.data.healer import DataHealer
+                healer = DataHealer(self.llm, self.project.project_path)
+                df = healer.resilient_read_csv(data_path)
+            except Exception:
+                df = pd.read_csv(data_path)
+        else:
+            df = pd.read_csv(data_path)
+        
         if target_col not in df.columns:
             raise ValueError(f"target_col '{target_col}' not in dataset")
 
-        feature_registry = self._build_feature_registry(df=df, target_col=target_col)
+        # Build feature registry with self-healing if enabled
+        if self_heal and self.llm:
+            config = self.project.config
+            healing_config = config.get("self_healing", {})
+            
+            if healing_config.get("enabled", True) and 3 in healing_config.get("modes", []):
+                feature_registry = self._build_feature_registry_with_healing(df=df, target_col=target_col)
+            else:
+                feature_registry = self._build_feature_registry(df=df, target_col=target_col)
+        else:
+            feature_registry = self._build_feature_registry(df=df, target_col=target_col)
+            
         model_recs = self._recommend_models(feas)
 
         if (not headless) and self.llm is not None:
@@ -124,6 +149,68 @@ class Mode3Executor:
                     importance_rank=None,
                 )
             )
+        return FeatureRegistry(features=features)
+    
+    def _build_feature_registry_with_healing(self, *, df: pd.DataFrame, target_col: str) -> FeatureRegistry:
+        """Build feature registry with self-healing transformations."""
+        print("🔧 Building feature registry with self-healing...")
+        
+        # Initialize healer
+        healer = FeatureHealer(self.llm, self.project.project_path)
+        
+        # Get suggested transformations
+        suggested_transforms = healer.suggest_transformations(df)
+        
+        # Apply transformations with healing
+        df_transformed = healer.batch_heal_features(
+            df,
+            suggested_transforms,
+            fallback_values={col: 0 for col in df.columns if col != target_col}
+        )
+        
+        # Build enhanced feature registry
+        features: List[Feature] = []
+        
+        for col in df.columns:
+            if col == target_col:
+                continue
+            
+            # Original feature
+            features.append(
+                Feature(
+                    name=col,
+                    derivation="raw_column",
+                    source_columns=[col],
+                    temporal_safe=True,
+                    compute_cost="LOW",
+                    importance_rank=None,
+                )
+            )
+            
+            # Transformed feature if successfully created
+            if col in suggested_transforms and col in df_transformed.columns:
+                transform_type = "scaled" if "std()" in suggested_transforms[col] else "transformed"
+                features.append(
+                    Feature(
+                        name=f"{col}_{transform_type}",
+                        derivation=suggested_transforms[col],
+                        source_columns=[col],
+                        temporal_safe=False,  # Transformations may not be temporal-safe
+                        compute_cost="MEDIUM",
+                        importance_rank=None,
+                    )
+                )
+        
+        # Add healing examples to LLM memory if using EnhancedLLMProvider
+        if hasattr(self.llm, 'add_healing_example'):
+            for transform in healer.fix_history.values():
+                self.llm.add_healing_example(
+                    error_type="feature_transform",
+                    fix=transform.get("code", ""),
+                    success=True
+                )
+        
+        print(f"✅ Feature registry built with {len(features)} features")
         return FeatureRegistry(features=features)
 
     def _recommend_models(self, feas: FeasibilityReport) -> ModelRecommendations:

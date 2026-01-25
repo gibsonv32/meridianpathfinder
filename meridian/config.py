@@ -49,6 +49,15 @@ def load_config() -> Dict[str, Any]:
     return cfg
 
 
+def save_config(config: Dict[str, Any], start: Optional[Path] = None) -> Path:
+    """Save configuration to project meridian.yaml."""
+    path = find_project_config(start=start)
+    if path is None:
+        path = (start or Path.cwd()).resolve() / "meridian.yaml"
+    _write_yaml(path, config)
+    return path
+
+
 def save_project_llm_config(
     provider: Optional[str] = None, model: Optional[str] = None, start: Optional[Path] = None
 ) -> Path:

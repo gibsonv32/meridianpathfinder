@@ -1,0 +1,174 @@
+{
+  "test_data": [
+    {
+      "timestamp": "2026-01-22T17:54:02.232333",
+      "shape": [
+        500,
+        8
+      ],
+      "columns": [
+        {
+          "name": "customer_age",
+          "dtype": "int64",
+          "nullable": false,
+          "unique_count": 62,
+          "null_count": 0,
+          "sample_values": [
+            56,
+            69,
+            46,
+            32,
+            60
+          ],
+          "statistics": {
+            "min": 18.0,
+            "max": 79.0,
+            "mean": 49.91,
+            "std": 18.22190922905456
+          }
+        },
+        {
+          "name": "account_balance",
+          "dtype": "float64",
+          "nullable": true,
+          "unique_count": 421,
+          "null_count": 70,
+          "sample_values": [
+            1000000.0,
+            754.6029332113208,
+            3652.4766249075183,
+            10493.043189503973,
+            6750.17124176835
+          ],
+          "statistics": {
+            "min": 54.48403307587739,
+            "max": 1000000.0,
+            "mean": 28045.729794246963,
+            "std": 150235.55671940302
+          }
+        },
+        {
+          "name": "transaction_count",
+          "dtype": "int64",
+          "nullable": false,
+          "unique_count": 38,
+          "null_count": 0,
+          "sample_values": [
+            -1,
+            55,
+            51,
+            60,
+            57
+          ],
+          "statistics": {
+            "min": -1.0,
+            "max": 71.0,
+            "mean": 49.708,
+            "std": 8.497243216747956
+          }
+        },
+        {
+          "name": "days_since_last_purchase",
+          "dtype": "float64",
+          "nullable": true,
+          "unique_count": 256,
+          "null_count": 50,
+          "sample_values": [
+            112.0,
+            349.0,
+            253.0,
+            117.0,
+            197.0
+          ],
+          "statistics": {
+            "min": 0.0,
+            "max": 364.0,
+            "mean": 182.40222222222224,
+            "std": 105.08083851546434
+          }
+        },
+        {
+          "name": "product_category",
+          "dtype": "object",
+          "nullable": false,
+          "unique_count": 4,
+          "null_count": 0,
+          "sample_values": [
+            "Food",
+            "Clothing",
+            "Electronics",
+            "Food",
+            "Food"
+          ],
+          "statistics": null
+        },
+        {
+          "name": "customer_segment",
+          "dtype": "object",
+          "nullable": false,
+          "unique_count": 6,
+          "null_count": 0,
+          "sample_values": [
+            "gold",
+            "Gold",
+            "Silver",
+            "Bronze",
+            "Gold"
+          ],
+          "statistics": null
+        },
+        {
+          "name": "has_premium",
+          "dtype": "bool",
+          "nullable": false,
+          "unique_count": 2,
+          "null_count": 0,
+          "sample_values": [
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "statistics": {
+            "min": 0.0,
+            "max": 1.0,
+            "mean": 0.306,
+            "std": 0.46129120862890577
+          }
+        },
+        {
+          "name": "churn",
+          "dtype": "int64",
+          "nullable": false,
+          "unique_count": 2,
+          "null_count": 0,
+          "sample_values": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "statistics": {
+            "min": 0.0,
+            "max": 1.0,
+            "mean": 0.216,
+            "std": 0.41192640936636604
+          }
+        }
+      ],
+      "column_order": [
+        "customer_age",
+        "account_balance",
+        "transaction_count",
+        "days_since_last_purchase",
+        "product_category",
+        "customer_segment",
+        "has_premium",
+        "churn"
+      ],
+      "fingerprint": "5c7110708712b351586940bea9b3f151"
+    }
+  ]
+}

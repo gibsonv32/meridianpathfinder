@@ -1,0 +1,50 @@
+project:
+  name: DataQualityTest
+  version: 0.1.0
+  description: 'MERIDIAN project: DataQualityTest'
+llm:
+  # PRIMARY: gpt-oss-120b on DGX Spark via SGLang
+  provider: openai
+  # Use Docker bridge gateway when running in Docker, localhost when running directly
+  base_url: ${OPENAI_API_BASE_URL:-http://127.0.0.1:30000/v1}
+  model: openai/gpt-oss-120b
+  api_key: not-needed
+  temperature: 0.3
+  max_tokens: 4096
+  intelligence:
+    enabled: true
+    memory: true
+    few_shot: true
+    optimization: true
+  
+  # Mode-specific overrides
+  mode_overrides:
+    mode_5:  # Code generation ONLY - use Claude Opus 4.5
+      provider: anthropic
+      model: claude-opus-4-20250514
+      temperature: 0.2  # More deterministic for code
+      max_tokens: 8192  # More tokens for code generation
+
+# Self-healing configuration
+self_healing:
+  enabled: true
+  max_retries: 3
+  max_cost_per_run: 2.0  # USD
+  cache_fixes: true  # Remember successful fixes
+  modes:
+    - 0  # Enable for data loading
+    - 3  # Enable for feature engineering
+    - 5  # Enable for code generation
+  circuit_breaker:
+    max_failures: 10
+    max_cost_usd: 5.0  # Daily budget
+    reset_timeout: 3600  # seconds
+data:
+  default_path: data/
+  cache_enabled: true
+artifacts:
+  retention_days: 30
+  auto_verify: true
+execution:
+  parallel_enabled: false
+  timeout_seconds: 3600

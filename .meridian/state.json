@@ -1,111 +1,94 @@
 {
-  "project_name": "meridianpathfinder",
-  "created_at": "2026-01-20T16:53:33.594632Z",
+  "project_name": "try",
+  "created_at": "2026-01-22T22:54:02.197408Z",
   "current_mode": null,
   "mode_states": {
     "0.5": {
       "mode": "0.5",
-      "status": "complete",
-      "started_at": "2026-01-20T17:49:11.355049Z",
-      "completed_at": "2026-01-20T17:49:11.357629Z",
-      "gate_verdict": "go",
-      "artifact_ids": [
-        "7edb32e1-4759-4900-a752-1a4d7cd261df",
-        "b5c56b32-bd68-4162-b75d-3e7fd3d505a9"
-      ]
+      "status": "not_started",
+      "started_at": null,
+      "completed_at": null,
+      "gate_verdict": null,
+      "artifact_ids": []
     },
     "0": {
       "mode": "0",
       "status": "complete",
-      "started_at": "2026-01-20T16:56:14.305162Z",
-      "completed_at": "2026-01-20T16:56:14.306844Z",
+      "started_at": "2026-01-22T22:54:02.258576Z",
+      "completed_at": "2026-01-22T22:54:02.264635Z",
       "gate_verdict": "go",
       "artifact_ids": [
-        "140904c0-f0f8-48a3-bc4e-bf4dfb715f8e"
+        "c719b787-ac12-43bf-94a6-52762ab606c9"
       ]
     },
     "1": {
       "mode": "1",
       "status": "complete",
-      "started_at": "2026-01-20T17:09:58.325850Z",
-      "completed_at": "2026-01-20T17:09:58.327654Z",
+      "started_at": "2026-01-22T22:54:02.264963Z",
+      "completed_at": "2026-01-22T22:54:02.266144Z",
       "gate_verdict": "go",
       "artifact_ids": [
-        "c20d410b-9e2c-4c5c-a8e9-e26b078f96f3"
+        "cf98fecd-5c62-431b-80f9-e19783ab1b58"
       ]
     },
     "2": {
       "mode": "2",
       "status": "complete",
-      "started_at": "2026-01-20T17:10:06.961648Z",
-      "completed_at": "2026-01-20T17:10:06.969638Z",
-      "gate_verdict": "go",
+      "started_at": "2026-01-22T22:54:02.266391Z",
+      "completed_at": "2026-01-22T22:54:02.291027Z",
+      "gate_verdict": "no_go",
       "artifact_ids": [
-        "8e6d4277-ce73-4a07-b4c7-866a35b118d2"
+        "e5e57c40-f7a1-4941-885b-901664c807ea"
       ]
     },
     "3": {
       "mode": "3",
-      "status": "complete",
-      "started_at": "2026-01-20T17:16:02.084370Z",
-      "completed_at": "2026-01-20T17:16:02.087868Z",
-      "gate_verdict": "go",
-      "artifact_ids": [
-        "877504b0-d205-45ed-81ac-410b1c6110fc",
-        "529ad67a-fe04-476b-9008-7b9373239754"
-      ]
+      "status": "not_started",
+      "started_at": null,
+      "completed_at": null,
+      "gate_verdict": null,
+      "artifact_ids": []
     },
     "4": {
       "mode": "4",
-      "status": "complete",
-      "started_at": "2026-01-20T17:20:36.609560Z",
-      "completed_at": "2026-01-20T17:20:36.612205Z",
-      "gate_verdict": "go",
-      "artifact_ids": [
-        "8668a37f-f708-4c21-8759-21e1f12e202b",
-        "2ed9bac9-67f2-4b0c-853e-dafefed4cb7d"
-      ]
+      "status": "not_started",
+      "started_at": null,
+      "completed_at": null,
+      "gate_verdict": null,
+      "artifact_ids": []
     },
     "5": {
       "mode": "5",
-      "status": "complete",
-      "started_at": "2026-01-20T17:28:18.067105Z",
-      "completed_at": "2026-01-20T17:28:18.070497Z",
-      "gate_verdict": "go",
-      "artifact_ids": [
-        "f4746d79-ff94-419d-bef9-971ef19c6910"
-      ]
+      "status": "not_started",
+      "started_at": null,
+      "completed_at": null,
+      "gate_verdict": null,
+      "artifact_ids": []
     },
     "6": {
       "mode": "6",
-      "status": "complete",
-      "started_at": "2026-01-20T17:32:49.014554Z",
-      "completed_at": "2026-01-20T17:32:49.110960Z",
-      "gate_verdict": "go",
-      "artifact_ids": [
-        "fde936a0-7b23-4b7a-bd71-925e526a9765"
-      ]
+      "status": "not_started",
+      "started_at": null,
+      "completed_at": null,
+      "gate_verdict": null,
+      "artifact_ids": []
     },
     "6.5": {
       "mode": "6.5",
-      "status": "complete",
-      "started_at": "2026-01-20T17:37:23.972440Z",
-      "completed_at": "2026-01-20T17:37:23.974822Z",
-      "gate_verdict": "go",
-      "artifact_ids": [
-        "5125acc6-0572-430c-a71b-c99949331b45"
-      ]
+      "status": "not_started",
+      "started_at": null,
+      "completed_at": null,
+      "gate_verdict": null,
+      "artifact_ids": []
     },
     "7": {
       "mode": "7",
-      "status": "complete",
-      "started_at": "2026-01-20T17:45:29.440085Z",
-      "completed_at": "2026-01-20T17:45:29.442674Z",
-      "gate_verdict": "go",
-      "artifact_ids": [
-        "ecce75a9-6197-428d-880e-a78c4983da10"
-      ]
+      "status": "not_started",
+      "started_at": null,
+      "completed_at": null,
+      "gate_verdict": null,
+      "artifact_ids": []
     }
   },
-  "config_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  "config_hash": "553c4c5c3cb72df2efbc3de102f8e66407f4347c8ef9d61ae41e32f6bab45ca3"
 }

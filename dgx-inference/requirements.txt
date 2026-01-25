@@ -1,0 +1,21 @@
+# DGX Inference Router - Python Dependencies
+
+# Web framework
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+
+# Anthropic Claude SDK
+anthropic>=0.40.0
+
+# HTTP client for SGLang
+httpx>=0.27.0
+
+# Configuration management
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+
+# Async support
+anyio>=4.0.0
+
+# Type hints
+typing-extensions>=4.9.0

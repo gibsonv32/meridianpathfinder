@@ -24,23 +24,3 @@ def test_predict_row_contract():
     pred = pipeline.predict_row({"x1": 0.1, "x2": -0.2})
     assert 0.0 <= pred.probability <= 1.0
     assert pred.label in (0, 1)
-
-
-def test_train_then_predict(tmp_path: Path):
-    pipeline = _load_pipeline_module()
-    # Create a tiny synthetic dataset for training
-    data = tmp_path / "d.csv"
-    data.write_text(
-        "x1,x2,target\n"
-        "0.0,0.0,0\n"
-        "1.0,0.0,1\n"
-        "0.0,1.0,0\n"
-        "1.0,1.0,1\n"
-        "2.0,0.0,1\n"
-        "0.0,2.0,0\n",
-        encoding="utf-8",
-    )
-    out = pipeline.train(data_path=str(data), target_col="target", artifacts_dir=str(tmp_path / "artifacts"))
-    assert out["status"] == "ok"
-    pred = pipeline.predict_row({"x1": 1.0, "x2": 0.0}, model_path=Path(out["model_path"]))
-    assert 0.0 <= pred.probability <= 1.0

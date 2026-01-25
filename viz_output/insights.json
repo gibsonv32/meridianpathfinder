@@ -1,0 +1,8 @@
+{
+  "distributions": "Features show relatively normal distributions.",
+  "correlation_heatmap": "No highly correlated features detected (threshold: 0.8).",
+  "missing_values": "No missing values detected in the dataset.",
+  "target": "Classification target with 2 classes. ",
+  "pairplot": "Pairwise relationships shown for top 3 features. Look for linear relationships and clusters.",
+  "outlier_analysis": "Outliers are within acceptable range (<5% for all features)."
+}

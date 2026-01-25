@@ -1,0 +1,30 @@
+{
+  "artifact_id": "cf98fecd-5c62-431b-80f9-e19783ab1b58",
+  "artifact_type": "DecisionIntelProfile",
+  "schema_version": "2.3.1",
+  "created_at": "2026-01-22T22:54:02.265292Z",
+  "fingerprint_id": "cf98fecd-5c62-431b-80f9-e19783ab1b58",
+  "kpi_trace": {
+    "business_kpi": "Reduce customer churn by 20% while maintaining service quality",
+    "proxy_metric": null,
+    "measurement": null
+  },
+  "hypotheses": [
+    {
+      "statement": "Customer account balance predicts churn probability",
+      "confidence": "MEDIUM"
+    },
+    {
+      "statement": "Transaction frequency indicates engagement level",
+      "confidence": "MEDIUM"
+    },
+    {
+      "statement": "Demographics alone don't predict churn",
+      "confidence": "MEDIUM"
+    }
+  ],
+  "constraint_matrix": {},
+  "definitions_of_done": {},
+  "assumptions": [],
+  "gate_verdict": "go"
+}

@@ -20,6 +20,8 @@ from meridian.core.gates import GateVerdict
 from meridian.core.modes import Mode
 from meridian.core.state import MeridianProject
 from meridian.llm.providers import LLMProvider
+from meridian.data.healer import DataHealer
+from meridian.data.quality_advisor import QualityAdvisor
 
 
 @dataclass
@@ -29,10 +31,56 @@ class Mode0Executor:
 
     mode: Mode = Mode.MODE_0
 
-    def run(self, data_path: Path, headless: bool = False) -> Mode0GatePacket:
+    def run(self, data_path: Path, headless: bool = False, self_heal: bool = True, quality_check: bool = True) -> Mode0GatePacket:
         t0 = perf_counter()
         data_path = data_path.expanduser().resolve()
-        df = pd.read_csv(data_path)
+        dataset_name = data_path.stem
+        
+        # Try to load CSV with self-healing and quality advisor if enabled
+        if self_heal and self.llm:
+            config = self.project.config
+            healing_config = config.get("self_healing", {})
+            
+            if healing_config.get("enabled", True) and quality_check:
+                # Use full quality advisor (Phase 3)
+                try:
+                    advisor = QualityAdvisor(self.project.project_path, self.llm)
+                    df = advisor.load_and_heal(data_path, dataset_name)
+                    
+                    # Get quality report
+                    quality_report = advisor.suggest_pipeline_improvements(df)
+                    
+                    # Store quality insights as a risk
+                    if quality_report.get("preprocessing"):
+                        quality_note = "Data Quality Insights:\n" + "\n".join(quality_report["preprocessing"][:3])
+                    else:
+                        quality_note = "Data quality assessment completed - no major issues found."
+                        
+                except Exception as e:
+                    print(f"✗ Quality advisor failed: {e}")
+                    # Fallback to simple healer
+                    healer = DataHealer(self.llm, self.project.project_path)
+                    df = healer.resilient_read_csv(data_path)
+                    quality_note = None
+                    
+            elif healing_config.get("enabled", True):
+                # Use simple healer (Phase 1)
+                try:
+                    healer = DataHealer(self.llm, self.project.project_path)
+                    df = healer.resilient_read_csv(data_path)
+                    print(f"✓ Data loaded successfully (self-healing {'used' if healer.circuit_breaker.total_cost > 0 else 'ready'})")
+                    quality_note = None
+                except Exception as e:
+                    print(f"✗ Self-healing failed: {e}")
+                    df = pd.read_csv(data_path)
+                    quality_note = None
+            else:
+                df = pd.read_csv(data_path)
+                quality_note = None
+        else:
+            # Standard CSV loading without healing
+            df = pd.read_csv(data_path)
+            quality_note = None
 
         fp = self._dataset_fingerprint(df=df, data_path=data_path)
         qa = self._quality_assessment(df)
@@ -53,6 +101,12 @@ class Mode0Executor:
         # Gate + state update
         self.project.start_mode(Mode.MODE_0)
 
+        # Add quality note if available (Phase 3)
+        if quality_note:
+            packet.risks.append(
+                Risk(severity="MEDIUM", description="Data quality assessment", mitigation=quality_note)
+            )
+        
         # (Optional) LLM narrative hook — stored as a risk note for now.
         if (not headless) and self.llm is not None:
             try:
@@ -123,6 +177,10 @@ class Mode0Executor:
 
         outlier_cols = []
         for c in df.select_dtypes(include=[np.number]).columns:
+            # Skip boolean columns even if they're marked as numeric
+            if df[c].dtype == 'bool' or str(df[c].dtype).startswith('bool'):
+                continue
+                
             series = df[c].dropna()
             if series.empty:
                 continue
@@ -149,7 +207,8 @@ class Mode0Executor:
         out: dict[str, DistributionStats] = {}
         for c in df.columns:
             col = df[c]
-            if pd.api.types.is_numeric_dtype(col):
+            # Check if numeric but not boolean
+            if pd.api.types.is_numeric_dtype(col) and col.dtype != 'bool' and not str(col.dtype).startswith('bool'):
                 s = col.dropna()
                 stats = {
                     "count": int(s.shape[0]),
