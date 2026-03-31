@@ -1,0 +1,167 @@
+---
+title: "Exercise 8.11 — Forecasting NZ Arrivals to Australia"
+author: "Vincent Gibson"
+format:
+  html:
+    code-fold: false
+    toc: true
+    theme: cosmo
+---
+
+```{r setup, message=FALSE, warning=FALSE}
+library(fpp3)
+```
+
+## Part (a): Time Plot
+
+```{r}
+nzarrivals <- aus_arrivals %>% filter(Origin == "NZ")
+nzarrivals %>% autoplot(Arrivals) +
+  labs(title = "Quarterly Arrivals to Australia from New Zealand",
+       y = "Arrivals (thousands)")
+```
+
+The series shows a clear **upward trend** over time, with arrivals growing from around 50,000 in the early 1980s to over 100,000 by 2012. There is strong **quarterly seasonality**, with peaks typically occurring in Q3 (July–September), corresponding to the winter school holiday period in New Zealand when many travel to Australia. The seasonal fluctuations grow larger as the level of the series increases, suggesting **multiplicative seasonality**. There is also an apparent dip around 2003, possibly related to the SARS outbreak and its effect on travel.
+
+## Part (b): Holt-Winters Multiplicative Forecast
+
+```{r}
+# Data ends 2012 Q3; remove last 2 years -> training ends 2010 Q3
+train <- nzarrivals %>% filter(Quarter <= yearquarter("2010 Q3"))
+test  <- nzarrivals %>% filter(Quarter > yearquarter("2010 Q3"))
+
+hw_fit <- train %>%
+  model(hw_mult = ETS(Arrivals ~ error("M") + trend("A") + season("M")))
+
+hw_fc <- hw_fit %>% forecast(h = 8)
+
+hw_fc %>%
+  autoplot(nzarrivals, level = 80) +
+  labs(title = "Holt-Winters Multiplicative Forecast vs Actuals",
+       y = "Arrivals (thousands)")
+```
+
+The Holt-Winters multiplicative method captures the seasonal pattern and upward trend well. The forecasts track the actual values reasonably closely over the two-year test period.
+
+## Part (c): Why Multiplicative Seasonality?
+
+Multiplicative seasonality is necessary because the magnitude of the seasonal fluctuations increases proportionally with the level of the series. As arrivals grow over time, the seasonal peaks and troughs become larger in absolute terms. An additive model would assume constant seasonal variation regardless of the level, which would underestimate peaks at higher levels and overestimate them at lower levels.
+
+## Part (d): Four Models — 2-Year Forecasts
+
+```{r}
+fit <- train %>%
+  model(
+    ets_auto = ETS(Arrivals),
+    ets_bc   = ETS(box_cox(Arrivals, guerrero(Arrivals)) ~ error("A") + trend("A") + season("A")),
+    snaive   = SNAIVE(Arrivals),
+    stl      = decomposition_model(STL(log(Arrivals)), ETS(season_adjust))
+  )
+
+fc <- fit %>% forecast(h = 8)
+fc
+```
+
+```{r}
+fc %>%
+  autoplot(nzarrivals, level = 80) +
+  facet_wrap(~.model, ncol = 2, scales = "free_y") +
+  labs(title = "Two-Year Forecasts from Four Models",
+       y = "Arrivals (thousands)")
+```
+
+All four models capture the seasonal pattern. The automatic ETS and STL+ETS models produce forecasts that follow the upward trend, while SNAIVE repeats the last year's pattern without trend adjustment. The Box-Cox transformed additive ETS also handles the growing seasonality through the transformation.
+
+## Part (e): Accuracy and Residual Diagnostics
+
+```{r}
+accuracy(fc, nzarrivals)
+```
+
+```{r}
+# Identify the best model based on accuracy measures
+best_model <- accuracy(fc, nzarrivals) %>%
+  arrange(RMSE)
+best_model
+```
+
+```{r}
+# Residual diagnostics for each model
+fit %>% select(ets_auto) %>% gg_tsresiduals()
+fit %>% select(ets_bc) %>% gg_tsresiduals()
+fit %>% select(snaive) %>% gg_tsresiduals()
+fit %>% select(stl) %>% gg_tsresiduals()
+```
+
+```{r}
+# Count estimated parameters using tidy() for ETS models
+# ets_auto (MAM): alpha, beta, gamma, l0, b0, s0, s-1, s-2, s-3 = 9 params -> dof = 8
+# ets_bc (AAA on transformed): alpha, beta, gamma, l0, b0, s0, s-1, s-2, s-3 = 9 params -> dof = 8
+# snaive: 0 estimated params -> dof = 0
+# stl (ETS(A,A,N) on season_adjust): alpha, beta, l0, b0 = 4 params -> dof = 3
+
+# Ljung-Box tests for each model (lag must exceed dof)
+cat("--- ETS Auto (dof = 8) ---\n")
+augment(fit) %>% filter(.model == "ets_auto") %>%
+  features(.innov, ljung_box, lag = 16, dof = 8)
+
+cat("--- ETS Box-Cox (dof = 8) ---\n")
+augment(fit) %>% filter(.model == "ets_bc") %>%
+  features(.innov, ljung_box, lag = 16, dof = 8)
+
+cat("--- SNAIVE (dof = 0) ---\n")
+augment(fit) %>% filter(.model == "snaive") %>%
+  features(.innov, ljung_box, lag = 8, dof = 0)
+
+cat("--- STL + ETS (dof = 3) ---\n")
+augment(fit) %>% filter(.model == "stl") %>%
+  features(.innov, ljung_box, lag = 8, dof = 3)
+```
+
+Based on the accuracy measures (RMSE, MAE, MAPE), the model with the lowest error on the test set is selected as the best. If there are conflicts among accuracy measures, the model with the lowest RMSE is preferred since it penalizes larger errors more heavily, which is important for arrival forecasting where large misses are costly.
+
+The Ljung-Box test checks whether the residuals are white noise. A p-value above 0.05 indicates no significant autocorrelation remains, meaning the model has adequately captured the patterns in the data.
+
+## Part (f): Time Series Cross-Validation
+
+```{r}
+# Create cross-validation datasets: start with 36 observations, forecast 3 steps ahead
+nz_cv <- nzarrivals %>%
+  stretch_tsibble(.init = 36, .step = 1)
+
+nz_cv
+```
+
+```{r}
+# Fit all four models on the CV datasets
+cv_fit <- nz_cv %>%
+  model(
+    ets_auto = ETS(Arrivals),
+    ets_bc   = ETS(box_cox(Arrivals, guerrero(Arrivals)) ~ error("A") + trend("A") + season("A")),
+    snaive   = SNAIVE(Arrivals),
+    stl      = decomposition_model(STL(log(Arrivals)), ETS(season_adjust))
+  )
+
+cv_fc <- cv_fit %>% forecast(h = 3)
+```
+
+```{r}
+# Cross-validation accuracy
+cv_accuracy <- cv_fc %>% accuracy(nzarrivals)
+cv_accuracy %>% arrange(RMSE)
+```
+
+```{r}
+# Compare CV accuracy visually
+cv_accuracy %>%
+  select(.model, RMSE, MAE, MAPE) %>%
+  pivot_longer(-`.model`, names_to = "Measure", values_to = "Value") %>%
+  ggplot(aes(x = .model, y = Value, fill = .model)) +
+  geom_col() +
+  facet_wrap(~Measure, scales = "free_y") +
+  labs(title = "Cross-Validation Accuracy Comparison",
+       x = "Model", y = "Value") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+The cross-validation results provide a more robust comparison than the single train/test split because they evaluate each model across many different training windows. If the rankings change compared to part (e), it suggests that the single split may have been unrepresentative. The model that performs best across the cross-validation windows is the most reliable choice for future forecasting.
