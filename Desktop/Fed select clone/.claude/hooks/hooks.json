@@ -1,0 +1,104 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const i=JSON.parse(d);const cmd=i.tool_input?.command||'';if(/\\b(uvicorn|gunicorn|fastapi)\\b/.test(cmd)&&!/tmux/.test(cmd)){console.error('[Hook] BLOCKED: Run dev servers inside tmux so logs are accessible.');console.error('[Hook] Use: tmux new -d -s dev \\\"uvicorn main:app --reload\\\"');process.exit(2)}console.log(d)})\""
+          }
+        ],
+        "description": "Block dev server commands outside tmux"
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const i=JSON.parse(d);const cmd=i.tool_input?.command||'';if(/\\bgit\\s+push\\b/.test(cmd)){console.error('[Hook] Reminder: Review changes before pushing.');console.error('[Hook] Consider: git log --oneline -5 && git diff HEAD~1')}console.log(d)})\""
+          }
+        ],
+        "description": "Remind to review changes before git push"
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const i=JSON.parse(d);const cmd=i.tool_input?.command||'';if(/\\bgit\\s+commit\\b/.test(cmd)){const msgMatch=cmd.match(/-m\\s+[\\\"']([^\\\"']*)[\\\"']/);if(msgMatch){const msg=msgMatch[1];if(!/^(feat|fix|docs|test|refactor|chore|perf|ci|build|style)(\\(.+\\))?:/.test(msg)){console.error('[Hook] Commit message should use conventional format: feat|fix|docs|test|refactor|chore: description');console.error('[Hook] Example: feat(policy): add SSAC threshold rule')}}if(/\\bconsole\\.log\\b|\\bprint\\(/.test(cmd)){console.error('[Hook] WARNING: Possible debug statements in commit')}}console.log(d)})\""
+          }
+        ],
+        "description": "Validate conventional commit message format"
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const i=JSON.parse(d);const p=i.tool_input?.file_path||'';const c=i.tool_input?.content||'';const lines=c.split('\\n').length;if(lines>800){console.error('[Hook] BLOCKED: File exceeds 800 lines ('+lines+' lines)');console.error('[Hook] Split into smaller, focused modules');process.exit(2)}if(/\\.(py|js|jsx)$/.test(p)&&/(api[_-]?key|password|secret|token)\\s*=\\s*[\\\"'][^\\\"']{8,}/.test(c)){console.error('[Hook] BLOCKED: Possible hardcoded credential detected');process.exit(2)}console.log(d)})\""
+          }
+        ],
+        "description": "Block large files (>800 lines) and hardcoded credentials"
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const i=JSON.parse(d);const p=i.tool_input?.file_path||'';if(/\\.(md|txt)$/i.test(p)&&!/README|CLAUDE|CONTRIBUTING|CHANGELOG|LICENSE|SKILL|docs[\\\\/]|skills[\\\\/]|memory[\\\\/]|agents[\\\\/]/i.test(p)){console.error('[Hook] Warning: Creating non-standard doc file: '+p);console.error('[Hook] Standard locations: README.md, CLAUDE.md, docs/, memory/')}console.log(d)})\""
+          }
+        ],
+        "description": "Warn about non-standard documentation files"
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const i=JSON.parse(d);const cmd=i.tool_input?.command||'';const out=i.tool_output?.output||'';if(/gh\\s+pr\\s+create/.test(cmd)&&out){const m=out.match(/https:\\/\\/github\\.com\\/[^\\s]+/);if(m){console.error('[Hook] PR created: '+m[0]);console.error('[Hook] Review: gh pr view '+m[0]+' --web')}}console.log(d)})\""
+          }
+        ],
+        "description": "Log PR URL after gh pr create"
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const i=JSON.parse(d);const cmd=i.tool_input?.command||'';const out=i.tool_output?.output||'';if(/pytest/.test(cmd)&&out){const failMatch=out.match(/(\\d+) failed/);const passMatch=out.match(/(\\d+) passed/);if(failMatch){console.error('[Hook] TEST FAILURES: '+failMatch[1]+' failed'+(passMatch?' / '+passMatch[1]+' passed':''));console.error('[Hook] Fix failures before committing')}else if(passMatch){console.error('[Hook] Tests: '+passMatch[1]+' passed')}}console.log(d)})\"",
+            "async": true,
+            "timeout": 10
+          }
+        ],
+        "description": "Summarize pytest results after test runs"
+      },
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const i=JSON.parse(d);const p=i.tool_input?.file_path||'';const ns=i.tool_input?.new_string||'';if(/\\.py$/.test(p)){if(/\\bprint\\(/.test(ns)&&!/logging/.test(ns)){console.error('[Hook] Warning: print() statement added to '+p);console.error('[Hook] Consider using logging module instead')}if(/\\beval\\(/.test(ns)){console.error('[Hook] Warning: eval() usage in '+p);console.error('[Hook] Ensure safe defaults are injected before eval (Q-code pattern)')}}if(/TODO|FIXME|HACK/.test(ns)){console.error('[Hook] New TODO/FIXME added — consider creating an issue')}console.log(d)})\""
+          }
+        ],
+        "description": "Warn about print(), eval(), and TODO statements in edits"
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"const fs=require('fs');let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const ts=new Date().toISOString();const logDir=process.env.HOME+'/.fedprocure';if(!fs.existsSync(logDir))fs.mkdirSync(logDir,{recursive:true});const logFile=logDir+'/session_log.jsonl';fs.appendFileSync(logFile,JSON.stringify({timestamp:ts,event:'stop'})+' \\n')}catch(e){console.error('[SessionLog] '+e.message)}console.log(d||'{}')})\"",
+            "async": true,
+            "timeout": 5
+          }
+        ],
+        "description": "Persist session markers for continuity"
+      }
+    ]
+  }
+}
