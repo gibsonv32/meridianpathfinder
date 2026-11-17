@@ -3,6 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Frontline AI Readiness Lab</title>
+<meta name="description" content="An interactive 15-minute AI readiness sprint for contact center teams: adaptive lessons, a scored simulation, coaching and an adoption dashboard. Work sample by Vincent Gibson, built on synthetic data.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Frontline AI Readiness Lab">
+<meta property="og:description" content="An interactive 15-minute AI readiness sprint for contact center teams: adaptive lessons, a scored simulation, coaching and an adoption dashboard. Work sample by Vincent Gibson, built on synthetic data.">
 <style>:root{color-scheme:light}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 </head>
 <body>
@@ -1299,6 +1304,8 @@ table.tbl { border-collapse: collapse; width: 100%; font-size: 14px; }
      The tutor always works from prepared lesson notes. Where the viewer is signed in to
      Claude and allows it, the same panel answers live. Scores never depend on it. */
   const AI = { fn: null };
+  /* True only when the page runs inside a Claude artifact viewer. Elsewhere there is no live mode to mention. */
+  const RUNTIME = !!(window.claude && typeof window.claude.use === "function");
   const HIDE = ["not_granted", "sampling_disabled", "not_declared", "capability_disabled", "capability_removed"];
   const aiLabel = () => (AI.fn ? "Live AI" : "Guided");
   function aiSync() {
@@ -1536,7 +1543,7 @@ table.tbl { border-collapse: collapse; width: 100%; font-size: 14px; }
       '<div class="cards rows" role="group" aria-label="Experience">' + cards(L.experience, "exp", "setExp") + "</div>" +
       (lockedProfile
         ? '<div class="row"><a class="btn primary" href="#' + next + '" data-go="' + next + '">Continue where you left off</a><span class="small muted">Use Start over at the foot of the page to change role.</span></div>'
-        : '<div class="row"><a class="btn primary" href="#diagnostic" data-go="diagnostic">Start the 2-minute diagnostic</a><span class="small muted">No sign-in. Nothing you type leaves this page unless you turn on the live tutor.</span></div>') +
+        : '<div class="row"><a class="btn primary" href="#diagnostic" data-go="diagnostic">Start the 2-minute diagnostic</a><span class="small muted">No sign-in. Nothing you type leaves this page' + (RUNTIME ? " unless you turn on the live tutor" : "") + '.</span></div>') +
       "</section>";
   }
   function vOverview() {
@@ -1548,7 +1555,7 @@ table.tbl { border-collapse: collapse; width: 100%; font-size: 14px; }
     ];
     const caps = [
       ["Adaptive 15-minute learning", "Five answers and your confidence decide which lessons you get, how deep they go, and what waits for the next sprint.", "diagnostic", "Start the diagnostic"],
-      ["Personalized AI tutoring", "A tutor beside every lesson. It answers from prepared lesson notes, and live through Claude when a signed-in viewer allows it.", "learn", "Open the lessons"],
+      ["Personalized AI tutoring", RUNTIME ? "A tutor beside every lesson. It answers from prepared lesson notes, and live through Claude when a signed-in viewer allows it." : "A tutor beside every lesson. It answers from prepared notes matched to the lesson and to your role and experience.", "learn", "Open the lessons"],
       ["Realistic business simulation", "A live contact or a coaching day, with a prompt to write, an AI draft to check and a judgment call to make.", "simulation", "Open the simulation"],
       ["Competency assessment", "Five competencies scored before and after. Every score links to what the learner did to earn it.", "results", "See a scorecard"],
       ["Coaching", "A guided reflection, a commitment card, and a toolkit a team leader can use the same day.", "results", "See the coaching plan"],
@@ -1622,7 +1629,7 @@ table.tbl { border-collapse: collapse; width: 100%; font-size: 14px; }
       '<div class="log" id="tutor-log" aria-live="polite">' + T.msgs.map(msgHtml).join("") + "</div>" +
       '<div class="chips">' + les.tutor.map((t, k) => '<button class="chip" data-act="askChip" data-arg="' + k + '">' + esc(t.q) + "</button>").join("") + "</div>" +
       '<div class="askrow"><input type="text" id="tutor-q" placeholder="Ask about this lesson" aria-label="Your question" autocomplete="off"><button class="btn primary sm" id="tutor-send" data-act="ask">Ask</button></div>' +
-      '<p class="small muted" data-guided-only>Guided mode. Answers come from prepared lesson notes. Viewers signed in to Claude get live answers here.</p>' +
+      '<p class="small muted" data-guided-only>Guided mode. Answers come from prepared lesson notes.' + (RUNTIME ? " Viewers signed in to Claude get live answers here." : "") + '</p>' +
       '<p class="small muted" data-ai-only>Live mode. Claude answers from this lesson and your role. Your first question asks for permission.</p>' +
     "</aside>";
   }

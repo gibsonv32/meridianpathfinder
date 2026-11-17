@@ -1,0 +1,2253 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Frontline AI Readiness Lab</title>
+<meta name="description" content="An interactive 15-minute AI readiness sprint for contact center teams: adaptive lessons, a scored simulation, coaching and an adoption dashboard. Work sample by Vincent Gibson, built on synthetic data.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Frontline AI Readiness Lab">
+<meta property="og:description" content="An interactive 15-minute AI readiness sprint for contact center teams: adaptive lessons, a scored simulation, coaching and an adoption dashboard. Work sample by Vincent Gibson, built on synthetic data.">
+<style>:root{color-scheme:light}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Frontline AI Readiness Lab</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Schibsted+Grotesk:wght@500;600;700&display=swap">
+<style>
+/* Layout: single-column app shell. A header carrying a contact-center style wallboard strip,
+   step tabs, then a two-column work area (content beside tutor or case file) that stacks on phones. */
+:root {
+  --bg: #F2F5F4; --surface: #FFFFFF; --surface-2: #E8EEEC; --line: #D2DBD8;
+  --ink: #13201D; --ink-2: #4B5C58; --ink-3: #6D7E7A;
+  --accent: #0B6B66; --accent-ink: #FFFFFF; --accent-soft: #DDEEEB;
+  --signal: #A85F08; --signal-soft: #F8E9D2;
+  --good: #1B7A4B; --good-soft: #DDF0E5; --warn: #8F5400; --warn-soft: #FBEBCF; --crit: #B3261E; --crit-soft: #F9DEDB;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --grid: #E2E8E6; --axis: #BAC6C2;
+  --h1: #cde2fb; --h2: #9ec5f4; --h3: #5598e7; --h4: #256abf; --h5: #104281;
+  --h1-ink: #0b0b0b; --h2-ink: #0b0b0b; --h3-ink: #0b0b0b; --h4-ink: #ffffff; --h5-ink: #ffffff;
+  --font-display: "Schibsted Grotesk", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-data: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --r: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E1615; --surface: #172220; --surface-2: #1F2E2B; --line: #2D3F3B;
+    --ink: #E7EFED; --ink-2: #A9BAB6; --ink-3: #849793;
+    --accent: #56C7BB; --accent-ink: #06211F; --accent-soft: #153B37;
+    --signal: #F0AC4E; --signal-soft: #3A2B12;
+    --good: #63CE95; --good-soft: #143524; --warn: #F2BB63; --warn-soft: #3A2C10; --crit: #F38B83; --crit-soft: #421A17;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --grid: #24332F; --axis: #3A4E49;
+    --h1: #0d366b; --h2: #184f95; --h3: #256abf; --h4: #5598e7; --h5: #9ec5f4;
+    --h1-ink: #ffffff; --h2-ink: #ffffff; --h3-ink: #ffffff; --h4-ink: #0b0b0b; --h5-ink: #0b0b0b;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E1615; --surface: #172220; --surface-2: #1F2E2B; --line: #2D3F3B;
+  --ink: #E7EFED; --ink-2: #A9BAB6; --ink-3: #849793;
+  --accent: #56C7BB; --accent-ink: #06211F; --accent-soft: #153B37;
+  --signal: #F0AC4E; --signal-soft: #3A2B12;
+  --good: #63CE95; --good-soft: #143524; --warn: #F2BB63; --warn-soft: #3A2C10; --crit: #F38B83; --crit-soft: #421A17;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --grid: #24332F; --axis: #3A4E49;
+  --h1: #0d366b; --h2: #184f95; --h3: #256abf; --h4: #5598e7; --h5: #9ec5f4;
+  --h1-ink: #ffffff; --h2-ink: #ffffff; --h3-ink: #ffffff; --h4-ink: #0b0b0b; --h5-ink: #0b0b0b;
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--font-body); -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 1160px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3, h4 { font-family: var(--font-display); line-height: 1.2; margin: 0; text-wrap: balance; letter-spacing: -0.01em; }
+h1 { font-size: clamp(28px, 4.4vw, 40px); font-weight: 700; }
+h2 { font-size: 22px; font-weight: 600; }
+h3 { font-size: 16px; font-weight: 600; }
+h4 { font-size: 14px; font-weight: 600; }
+p { margin: 0; }
+a { color: var(--accent); text-underline-offset: 3px; }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+#view:focus { outline: none; }
+.eyebrow { font: 500 11px/1.3 var(--font-data); letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-3); }
+.muted { color: var(--ink-2); }
+.small { font-size: 13px; }
+.num { font-variant-numeric: tabular-nums; }
+.stack { display: flex; flex-direction: column; gap: 16px; }
+.stack-s { display: flex; flex-direction: column; gap: 8px; }
+.stack-l { display: flex; flex-direction: column; gap: 28px; }
+.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.between { justify-content: space-between; }
+.measure { max-width: 68ch; }
+
+/* Header and wallboard */
+.top { background: var(--surface); border-bottom: 1px solid var(--line); }
+.top-row { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; justify-content: space-between; padding-block: 14px 10px; }
+.brand { display: flex; gap: 12px; align-items: center; text-decoration: none; color: var(--ink); min-width: 0; }
+.brand-mark { flex: none; width: 34px; height: 34px; border-radius: 8px; background: var(--accent); display: grid; place-items: center; }
+.brand-mark svg { display: block; }
+.brand-name { font: 600 16px/1.2 var(--font-display); }
+.brand-sub { font-size: 12px; color: var(--ink-2); }
+.board { display: flex; flex-wrap: wrap; gap: 6px; }
+.board > div { background: var(--surface-2); border-radius: 6px; padding: 5px 10px; font: 500 12px/1.3 var(--font-data); display: flex; gap: 8px; align-items: baseline; }
+.board span { color: var(--ink-3); letter-spacing: 0.08em; font-size: 10px; text-transform: uppercase; }
+.board b { font-weight: 500; font-variant-numeric: tabular-nums; }
+.tabs-scroll { overflow-x: auto; scrollbar-width: thin; }
+.tabs { display: flex; gap: 2px; min-width: max-content; }
+.tabs a { display: flex; gap: 8px; align-items: center; padding: 10px 12px; text-decoration: none; color: var(--ink-2); font-size: 14px; font-weight: 500; border-bottom: 2px solid transparent; white-space: nowrap; }
+.tabs a:hover { color: var(--ink); }
+.tabs a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--accent); }
+.tabs .n { font: 500 11px/1 var(--font-data); width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; background: var(--surface-2); color: var(--ink-2); }
+.tabs a.done .n { background: var(--good-soft); color: var(--good); }
+.tabs a[aria-current="page"] .n { background: var(--accent); color: var(--accent-ink); }
+.tabs .gap { width: 1px; background: var(--line); margin: 8px 10px; }
+
+main { padding-block: 28px 48px; min-height: 60vh; }
+.foot { padding-block: 20px 36px; border-top: 1px solid var(--line); color: var(--ink-2); font-size: 13px; display: flex; flex-wrap: wrap; gap: 10px 24px; justify-content: space-between; align-items: center; }
+
+/* Surfaces */
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 20px; min-width: 0; }
+.panel.flat { background: transparent; }
+.panel.tint { background: var(--accent-soft); border-color: transparent; }
+.band { background: var(--surface-2); border-radius: var(--r); padding: 14px 16px; }
+.notice { border-radius: var(--r); padding: 12px 14px; background: var(--signal-soft); color: var(--ink); font-size: 14px; display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; justify-content: space-between; }
+.rule { height: 1px; background: var(--line); border: 0; margin: 0; }
+
+/* Buttons and controls */
+.btn { appearance: none; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 8px; padding: 9px 16px; font-weight: 500; font-size: 14px; cursor: pointer; text-decoration: none; display: inline-flex; gap: 8px; align-items: center; justify-content: center; line-height: 1.3; }
+.btn:hover { border-color: var(--ink-3); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.primary:hover { filter: brightness(1.08); }
+.btn.quiet { border-color: transparent; background: transparent; color: var(--accent); padding-inline: 8px; }
+.btn.quiet:hover { background: var(--accent-soft); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; filter: none; }
+.btn.sm { padding: 6px 11px; font-size: 13px; }
+textarea, select, input[type="text"] { width: 100%; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+textarea { min-height: 96px; resize: vertical; line-height: 1.5; display: block; }
+select { width: auto; padding: 7px 10px; }
+label.fld { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--ink-2); font-weight: 500; }
+
+.cards { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); }
+.choice { appearance: none; text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px; cursor: pointer; display: flex; flex-direction: column; gap: 4px; }
+.choice:hover { border-color: var(--ink-3); }
+.choice[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--accent); }
+.choice b { font-weight: 600; }
+.cards.rows { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+.cards.rows .choice { padding: 11px 14px; }
+.choice span { font-size: 13px; color: var(--ink-2); }
+
+.opts { display: flex; flex-direction: column; gap: 8px; }
+.opt { appearance: none; width: 100%; text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; cursor: pointer; display: flex; gap: 12px; align-items: flex-start; line-height: 1.45; }
+.opt:hover:not(:disabled) { border-color: var(--ink-3); }
+.opt .key { flex: none; font: 500 12px/1 var(--font-data); width: 22px; height: 22px; border-radius: 6px; background: var(--surface-2); display: grid; place-items: center; margin-top: 1px; color: var(--ink-2); }
+.opt[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); background: var(--accent-soft); }
+.opt:disabled { cursor: default; color: var(--ink); opacity: 1; }
+.opt.right { border-color: var(--good); box-shadow: inset 0 0 0 1px var(--good); background: var(--good-soft); }
+.opt.wrong { border-color: var(--crit); box-shadow: inset 0 0 0 1px var(--crit); background: var(--crit-soft); }
+.opt.part { border-color: var(--warn); box-shadow: inset 0 0 0 1px var(--warn); background: var(--warn-soft); }
+.opt.dim:disabled { color: var(--ink-2); }
+
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--surface); }
+.seg button { appearance: none; border: 0; background: transparent; padding: 7px 12px; font-size: 13px; cursor: pointer; border-right: 1px solid var(--line); }
+.seg button:last-child { border-right: 0; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+
+.pill { display: inline-flex; gap: 6px; align-items: center; font-size: 12px; font-weight: 500; padding: 3px 9px; border-radius: 999px; background: var(--surface-2); color: var(--ink-2); white-space: nowrap; }
+.pill.good { background: var(--good-soft); color: var(--good); }
+.pill.warn { background: var(--warn-soft); color: var(--warn); }
+.pill.crit { background: var(--crit-soft); color: var(--crit); }
+.pill.accent { background: var(--accent-soft); color: var(--accent); }
+.pill.signal { background: var(--signal-soft); color: var(--signal); }
+.fb { border-radius: 8px; padding: 12px 14px; font-size: 14px; background: var(--surface-2); }
+.fb.good { background: var(--good-soft); }
+.fb.warn { background: var(--warn-soft); }
+.fb.crit { background: var(--crit-soft); }
+.fb b { font-weight: 600; }
+
+/* Overview */
+.hero { display: grid; gap: 28px; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); align-items: start; }
+.lede { font-size: 18px; line-height: 1.5; color: var(--ink-2); max-width: 56ch; }
+.steps { display: grid; gap: 0; counter-reset: step; }
+.steps li { list-style: none; display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 12px; align-items: baseline; padding: 11px 0; border-top: 1px solid var(--line); }
+.steps li:first-child { border-top: 0; }
+.steps ol, ol.steps { margin: 0; padding: 0; }
+.steps .n { font: 500 12px/1 var(--font-data); color: var(--accent); }
+.steps .t { font-weight: 600; }
+.steps .d { font-size: 13px; color: var(--ink-2); }
+.steps .m { font: 500 12px/1 var(--font-data); color: var(--ink-3); white-space: nowrap; }
+.grid-3 { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.cap h3 { margin-bottom: 4px; }
+.cap p { font-size: 14px; color: var(--ink-2); }
+.cap a { font-size: 13px; font-weight: 500; }
+
+/* Work area */
+.work { display: grid; gap: 24px; grid-template-columns: minmax(0, 1fr) 340px; align-items: start; }
+.work.sim { grid-template-columns: 330px minmax(0, 1fr); }
+.work > * { min-width: 0; }
+.side { position: sticky; top: 16px; }
+.pathrail { display: flex; flex-wrap: wrap; gap: 8px; }
+.pathrail .p { display: flex; gap: 8px; align-items: center; padding: 6px 10px; border-radius: 999px; border: 1px solid var(--line); font-size: 13px; background: var(--surface); color: var(--ink-2); }
+.pathrail .p.now { border-color: var(--accent); color: var(--ink); box-shadow: inset 0 0 0 1px var(--accent); }
+.pathrail .p.done { color: var(--good); border-color: transparent; background: var(--good-soft); }
+.pathrail .p.q { border-style: dashed; }
+.model { display: grid; gap: 0; border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+.model div { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 12px; padding: 10px 14px; border-top: 1px solid var(--line); background: var(--surface); }
+.model div:first-child { border-top: 0; }
+.model b { font-weight: 600; }
+.ba { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
+.ba > div { border-radius: 8px; padding: 12px 14px; background: var(--surface-2); font-size: 14px; }
+.ba > div.after { background: var(--accent-soft); }
+.ba .eyebrow { display: block; margin-bottom: 6px; }
+.quote { font-family: var(--font-data); font-size: 13px; line-height: 1.55; }
+.why li { margin: 0; }
+.pathlist { display: grid; gap: 0; }
+.pathlist .it { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; gap: 12px; padding: 12px 0; border-top: 1px solid var(--line); align-items: baseline; }
+.pathlist .it:first-child { border-top: 0; }
+
+/* Tutor and chat */
+.tutor { display: flex; flex-direction: column; gap: 12px; }
+.log { display: flex; flex-direction: column; gap: 8px; max-height: 380px; overflow-y: auto; padding-right: 2px; }
+.msg { max-width: 92%; padding: 9px 12px; border-radius: 12px; font-size: 14px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+.msg.tutor, .msg.cust { background: var(--surface-2); align-self: flex-start; border-bottom-left-radius: 4px; }
+.msg.you { background: var(--accent); color: var(--accent-ink); align-self: flex-end; border-bottom-right-radius: 4px; }
+.msg.assist { background: var(--accent-soft); align-self: flex-start; border-bottom-left-radius: 4px; }
+.msg.note { background: transparent; padding: 0; color: var(--ink-2); font-size: 13px; max-width: 100%; }
+.msg .who { display: block; font: 500 10px/1.2 var(--font-data); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 3px; }
+.msg.you .who { color: inherit; opacity: 0.8; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { appearance: none; border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 5px 11px; font-size: 13px; cursor: pointer; text-align: left; }
+.chip:hover { border-color: var(--accent); color: var(--accent); }
+.askrow { display: flex; gap: 8px; }
+.askrow input { flex: 1; min-width: 0; }
+[data-ai-only] { display: none; }
+body[data-ai="live"] [data-ai-only] { display: revert; }
+body[data-ai="live"] [data-guided-only] { display: none; }
+
+/* Simulation */
+.facts { display: grid; gap: 0; font-size: 14px; }
+.facts div { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 10px; padding: 7px 0; border-top: 1px solid var(--line); }
+.facts div:first-child { border-top: 0; }
+.facts span { color: var(--ink-2); }
+.ka { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font-size: 13px; background: var(--surface); }
+.ka h4 { display: flex; gap: 8px; align-items: baseline; margin-bottom: 6px; }
+.ka h4 code { font: 500 11px/1 var(--font-data); color: var(--accent); }
+.ka ul { margin: 0; padding-left: 16px; display: grid; gap: 4px; color: var(--ink-2); }
+.scene { display: flex; flex-direction: column; gap: 8px; }
+.segs { display: flex; flex-direction: column; gap: 6px; }
+.sg { appearance: none; text-align: left; border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 10px 12px; cursor: pointer; display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 10px; line-height: 1.45; }
+.sg .box { width: 18px; height: 18px; border: 1.5px solid var(--ink-3); border-radius: 4px; margin-top: 2px; display: grid; place-items: center; font-size: 12px; line-height: 1; }
+.sg[aria-pressed="true"] { border-color: var(--signal); background: var(--signal-soft); }
+.sg[aria-pressed="true"] .box { background: var(--signal); border-color: var(--signal); color: var(--surface); }
+.sg:disabled { cursor: default; color: var(--ink); }
+.sg.hit { border-color: var(--good); background: var(--good-soft); }
+.sg.miss { border-color: var(--crit); background: var(--crit-soft); }
+.sg.false { border-color: var(--warn); background: var(--warn-soft); }
+.sg small { display: block; margin-top: 4px; color: var(--ink-2); font-size: 13px; }
+.rubric { display: grid; gap: 6px; }
+.rubric div { display: grid; grid-template-columns: 22px 80px minmax(0, 1fr); gap: 8px; font-size: 14px; align-items: baseline; }
+.tick { font-weight: 700; }
+.tick.y { color: var(--good); }
+.tick.n { color: var(--crit); }
+.prog { display: flex; gap: 4px; }
+.prog i { flex: 1; height: 4px; border-radius: 2px; background: var(--surface-2); }
+.prog i.on { background: var(--accent); }
+
+/* Results */
+.score-hero { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+.stat .v { font: 600 34px/1.1 var(--font-display); font-variant-numeric: tabular-nums; }
+.stat .v small { font-size: 16px; font-weight: 500; color: var(--ink-2); }
+.stat .l { font-size: 13px; color: var(--ink-2); margin-top: 2px; }
+.db { display: grid; gap: 14px; }
+.db-row { display: grid; grid-template-columns: 190px minmax(0, 1fr) 96px; gap: 14px; align-items: center; }
+.db-track { position: relative; height: 22px; }
+.db-track::before { content: ""; position: absolute; left: 0; right: 0; top: 10px; height: 2px; background: var(--grid); border-radius: 1px; }
+.db-link { position: absolute; top: 9px; height: 4px; background: var(--s1); opacity: 0.35; border-radius: 2px; }
+.db-dot { position: absolute; top: 4px; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%; border: 2px solid var(--surface); }
+.db-dot.pre { background: var(--ink-3); }
+.db-dot.post { background: var(--s1); }
+.db-dot.avg { background: transparent; border: 2px solid var(--signal); width: 12px; height: 12px; margin-left: -6px; top: 5px; border-radius: 2px; transform: rotate(45deg); }
+.db-val { font: 500 13px/1.2 var(--font-data); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+.db-axis { display: grid; grid-template-columns: 190px minmax(0, 1fr) 96px; gap: 14px; font: 400 11px/1 var(--font-data); color: var(--ink-3); }
+.db-axis div { display: flex; justify-content: space-between; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--ink-2); }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
+.legend i.line { width: 16px; height: 2px; border-radius: 1px; vertical-align: 3px; }
+.legend i.sq { border-radius: 2px; }
+details.ev { border-top: 1px solid var(--line); }
+details.ev:first-of-type { border-top: 0; }
+details.ev summary { cursor: pointer; padding: 12px 0; display: grid; grid-template-columns: minmax(0, 1fr) auto auto 14px; gap: 12px; align-items: center; list-style: none; }
+details.ev summary::-webkit-details-marker { display: none; }
+details.ev summary::after { content: "+"; font: 500 16px/1 var(--font-data); color: var(--ink-3); width: 14px; text-align: center; }
+details.ev[open] summary::after { content: "\2212"; }
+.evlist { display: grid; gap: 8px; padding: 0 0 14px; }
+.evlist div { display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 10px; font-size: 14px; align-items: baseline; }
+.commit { border: 1px dashed var(--accent); border-radius: var(--r); padding: 16px; background: var(--surface); }
+.two { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); align-items: start; }
+.two > * { min-width: 0; }
+.copybox { font: 400 12px/1.6 var(--font-data); white-space: pre-wrap; background: var(--surface-2); border-radius: 8px; padding: 12px; max-height: 220px; overflow: auto; user-select: all; }
+
+/* Analytics */
+.filters { display: flex; flex-wrap: wrap; gap: 12px 18px; align-items: flex-end; }
+.kpis { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(165px, 1fr)); }
+.kpi { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px 16px; }
+.kpi .l { font-size: 13px; color: var(--ink-2); }
+.kpi .v { font: 600 28px/1.15 var(--font-display); margin-top: 4px; }
+.kpi .d { font-size: 12px; margin-top: 4px; color: var(--ink-2); }
+.kpi .d b { font-weight: 600; }
+.up-good { color: var(--good); }
+.funnel { display: grid; gap: 10px; }
+.fn-row { display: grid; grid-template-columns: 190px minmax(0, 1fr) 110px; gap: 12px; align-items: center; font-size: 14px; }
+.fn-bar { height: 20px; background: var(--surface-2); border-radius: 0 4px 4px 0; position: relative; }
+.fn-bar i { position: absolute; inset: 0 auto 0 0; background: var(--s1); border-radius: 0 4px 4px 0; }
+.fn-val { font: 500 13px/1.2 var(--font-data); text-align: right; white-space: nowrap; }
+.chart { position: relative; width: 100%; }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.chart text { font-family: var(--font-body); }
+.tip { position: fixed; z-index: 20; pointer-events: none; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 13px; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.14); min-width: 150px; color: var(--ink); }
+.tip h5 { margin: 0 0 4px; font: 500 11px/1.2 var(--font-data); color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.06em; }
+.tip div { display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; gap: 6px; align-items: center; }
+.tip div i { width: 14px; height: 2px; border-radius: 1px; }
+.tip div b { font-weight: 600; font-variant-numeric: tabular-nums; }
+.scroll-x { overflow-x: auto; }
+table.tbl { border-collapse: collapse; width: 100%; font-size: 14px; }
+.tbl th { text-align: left; font: 500 11px/1.3 var(--font-data); letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.tbl td { padding: 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.tbl tr:last-child td { border-bottom: 0; }
+.tbl td.r, .tbl th.r { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.heat td.c { text-align: center; font: 500 13px/1 var(--font-data); padding: 0; border: 2px solid var(--surface); }
+.heat td.c span { display: block; padding: 12px 6px; border-radius: 4px; }
+.heat th { text-align: center; }
+.heat th:first-child, .heat td:first-child { text-align: left; white-space: nowrap; }
+.b1 { background: var(--h1); color: var(--h1-ink); } .b2 { background: var(--h2); color: var(--h2-ink); } .b3 { background: var(--h3); color: var(--h3-ink); } .b4 { background: var(--h4); color: var(--h4-ink); } .b5 { background: var(--h5); color: var(--h5-ink); }
+.hl { display: flex; flex-wrap: wrap; gap: 4px; font: 400 11px/1 var(--font-data); align-items: center; color: var(--ink-2); }
+.hl span { padding: 5px 8px; border-radius: 3px; }
+
+/* Blueprint */
+.arch { display: grid; gap: 6px; }
+.layer { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 12px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+.layer .boxes { display: flex; flex-wrap: wrap; gap: 6px; }
+.layer .boxes span { background: var(--surface-2); border-radius: 6px; padding: 5px 10px; font-size: 13px; }
+.layer.key .boxes span { background: var(--accent-soft); }
+.flowmark { text-align: center; color: var(--ink-3); font-size: 12px; line-height: 1; }
+.plan { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.plan ul, .list { margin: 8px 0 0; padding-left: 18px; display: grid; gap: 6px; color: var(--ink-2); font-size: 14px; }
+.dl { display: grid; gap: 0; }
+.dl div { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 14px; padding: 11px 0; border-top: 1px solid var(--line); }
+.dl div:first-child { border-top: 0; }
+.dl b { font-weight: 600; }
+.dl span { color: var(--ink-2); font-size: 14px; }
+
+@media (max-width: 900px) {
+  .hero, .work, .work.sim { grid-template-columns: minmax(0, 1fr); }
+  .side { position: static; }
+  .log { max-height: 300px; }
+}
+@media (max-width: 620px) {
+  main { padding-block: 20px 36px; }
+  .panel { padding: 16px; }
+  .model div, .dl div, .layer { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .db-row, .db-axis { grid-template-columns: minmax(0, 1fr) 84px; }
+  .db-row .db-name { grid-column: 1 / -1; }
+  .db-axis > span:first-child { display: none; }
+  .fn-row { grid-template-columns: minmax(0, 1fr) auto; }
+  .fn-row .fn-name { grid-column: 1 / -1; }
+  .steps li { grid-template-columns: 24px minmax(0, 1fr); }
+  .steps .m { grid-column: 2; }
+  .rubric div { grid-template-columns: 22px minmax(0, 1fr); }
+  .rubric div span:last-child { grid-column: 2; }
+  .evlist div { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .lede { font-size: 16px; }
+  .heat th { padding: 8px 2px; letter-spacing: 0; font-size: 10px; }
+  .heat td.c span { padding: 10px 2px; }
+  .heat td:first-child { padding-left: 0; padding-right: 6px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .btn, .opt, .choice, .chip, .sg { transition: border-color 0.12s, background-color 0.12s; }
+}
+</style>
+
+<div id="app">
+  <header class="top">
+    <div class="wrap top-row">
+      <a class="brand" href="#overview" data-go="overview">
+        <span class="brand-mark" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 11a7 7 0 0 1 14 0" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/><rect x="2" y="10.5" width="3.6" height="5.5" rx="1.4" fill="#fff"/><rect x="14.4" y="10.5" width="3.6" height="5.5" rx="1.4" fill="#fff"/><path d="M16.2 16v.6a2 2 0 0 1-2 2H11" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </span>
+        <span>
+          <span class="brand-name">Frontline AI Readiness Lab</span><br>
+          <span class="brand-sub">Work sample by Vincent Gibson</span>
+        </span>
+      </a>
+      <div class="board" id="board" aria-label="Session status"></div>
+    </div>
+    <div class="wrap"><nav class="tabs-scroll" aria-label="Sections"><div class="tabs" id="tabs"></div></nav></div>
+  </header>
+  <main class="wrap" id="view" tabindex="-1"><p class="muted">Loading the lab&hellip;</p></main>
+  <footer class="wrap foot">
+    <span>Independent work sample. Not affiliated with or endorsed by Capital One. Northfield Card Services, Relay Assist and every person, policy and figure shown are fictional.</span>
+    <span id="reset-slot"></span>
+  </footer>
+</div>
+<div class="tip" id="tip" hidden></div>
+<script>
+/* Frontline AI Readiness Lab: learning content and synthetic data.
+   Everything here is fictional. Northfield Card Services, Relay Assist,
+   the people, the knowledge articles and every metric are invented for this work sample. */
+(function () {
+  "use strict";
+
+  var competencies = [
+    { id: "prompt", short: "Brief", name: "Brief the AI clearly", desc: "Give context, task, limits and format so the first draft is usable." },
+    { id: "verify", short: "Verify", name: "Verify before you send", desc: "Check every AI draft against the account and the knowledge article." },
+    { id: "protect", short: "Protect", name: "Protect customer data", desc: "Approved tools only, and only the details the task needs." },
+    { id: "judge", short: "Judge", name: "Own the judgment call", desc: "Spot the contacts that need a human decision or an escalation." },
+    { id: "improve", short: "Improve", name: "Coach and close the loop", desc: "Report what the tool gets wrong, share what works, coach others through the change." }
+  ];
+
+  var roles = [
+    { id: "agent", name: "Contact center agent", desc: "You handle live chats and calls from cardholders." },
+    { id: "backoffice", name: "Back-office specialist", desc: "You work disputes and written cases from a queue." },
+    { id: "leader", name: "Team leader", desc: "You coach a team of agents through the rollout." }
+  ];
+
+  var experience = [
+    { id: "new", name: "New to it", desc: "I have barely used generative AI." },
+    { id: "some", name: "Occasional user", desc: "I use it now and then." },
+    { id: "daily", name: "Daily user", desc: "It is part of how I work." }
+  ];
+
+  /* Extra priority by role when the path is built. */
+  var roleWeights = {
+    agent: { verify: 0.15, judge: 0.1 },
+    backoffice: { verify: 0.15, protect: 0.15 },
+    leader: { improve: 0.3, judge: 0.1 }
+  };
+
+  /* ---------- Diagnostic: one scenario per competency ---------- */
+  var diagnostic = [
+    {
+      id: "d-prompt", comp: "prompt",
+      stem: {
+        base: "You want Relay Assist to draft a reply about a late fee. Which request gives you the most usable first draft?",
+        leader: "An agent asks how to get better drafts from Relay Assist on late-fee contacts. Which request would you show them as the model?"
+      },
+      options: [
+        { t: "“Write a reply about a late fee.”", s: 0 },
+        { t: "“Customer disputes a $39 late fee. Payment posted 2 days after the due date, account in good standing, no waiver in 12 months. Draft a short, warm chat reply applying the courtesy waiver. Stay within KA-4417.”", s: 1 },
+        { t: "“Draft a warm reply about a late-fee waiver, under 80 words.”", s: 0.5 },
+        { t: "“Be very apologetic and give the customer whatever keeps them happy.”", s: 0 }
+      ]
+    },
+    {
+      id: "d-verify", comp: "verify",
+      stem: {
+        base: "Relay Assist drafts: “Your payment was received on time, so I have removed the fee.” The account screen shows the payment posted two days after the due date. What do you do?",
+        leader: "On a QA review you find this draft was sent as written: “Your payment was received on time, so I have removed the fee.” The account shows the payment posted two days late. What should the agent have done?"
+      },
+      options: [
+        { t: "Send it. The assistant can see the account data.", s: 0 },
+        { t: "Regenerate the draft until it reads correctly, then send.", s: 0.5 },
+        { t: "Correct the draft to match the account and the knowledge article, then send.", s: 1 },
+        { t: "Send it and add “please check your statement to confirm.”", s: 0 }
+      ]
+    },
+    {
+      id: "d-protect", comp: "protect",
+      stem: {
+        base: "A customer types their full card number and security code into the chat. You are about to ask Relay Assist to summarize the conversation. What is the right move?",
+        backoffice: "A customer letter in your queue includes their full card number and security code. You are about to ask Relay Assist to summarize the case. What is the right move?",
+        leader: "An agent asks you: “The customer typed their full card number and security code into chat. Can I paste the conversation into Relay Assist for a summary?” What do you tell them?"
+      },
+      options: [
+        { t: "Paste all of it. Relay Assist is an approved tool.", s: 0 },
+        { t: "Paste it, then delete the conversation afterwards.", s: 0 },
+        { t: "Leave the card number and security code out of the prompt, tell the customer not to share them, and follow the redaction step.", s: 1 },
+        { t: "Leave the card details out of the prompt and carry on.", s: 0.5 }
+      ]
+    },
+    {
+      id: "d-judge", comp: "judge",
+      stem: {
+        base: "A customer says they lost their job and cannot keep up with payments. Relay Assist suggests: “Offer the standard late-fee waiver and close the contact.” What do you do?",
+        leader: "An agent tells you a customer mentioned losing their job. Relay Assist suggested: “Offer the standard late-fee waiver and close the contact.” What do you coach?"
+      },
+      options: [
+        { t: "Follow the suggestion. It is drawn from thousands of similar contacts.", s: 0 },
+        { t: "Apply the waiver and leave a note so the next agent can pick up the hardship question.", s: 0.5 },
+        { t: "Ask Relay Assist whether this counts as hardship and do what it says.", s: 0 },
+        { t: "Treat it as a hardship signal, follow the hardship procedure, and treat the AI suggestion as incomplete.", s: 1 }
+      ]
+    },
+    {
+      id: "d-improve", comp: "improve",
+      stem: {
+        base: "You notice Relay Assist keeps quoting an out-of-date fee amount. What is the most useful thing to do?",
+        leader: "Four weeks into the rollout, half your team rarely opens Relay Assist. What do you do first?"
+      },
+      options: {
+        base: [
+          { t: "Correct it each time and move on.", s: 0.5 },
+          { t: "Flag the draft with the reason, and raise the pattern with your team leader.", s: 1 },
+          { t: "Stop using the tool for fee questions.", s: 0 },
+          { t: "Assume someone has already reported it.", s: 0 }
+        ],
+        leader: [
+          { t: "Set a daily usage target and report against it.", s: 0 },
+          { t: "Sit with two or three agents during live work to see what gets in the way, then coach on what you find.", s: 1 },
+          { t: "Send the launch training link again.", s: 0 },
+          { t: "Ask your strongest user to share tips at the next huddle.", s: 0.5 }
+        ]
+      }
+    }
+  ];
+
+  /* ---------- Lessons: one per competency, role-adapted ---------- */
+  var lessons = {
+    prompt: {
+      title: "Brief the AI like a new teammate",
+      hook: {
+        agent: "You have a customer waiting and twenty seconds to get a usable draft. A vague request gets you a vague reply that you will rewrite anyway.",
+        backoffice: "You have forty cases in the queue. Every rewrite of a weak AI draft costs the minutes the tool was meant to save.",
+        leader: "When an agent says the AI drafts are useless, look first at what they asked for."
+      },
+      modelName: "Context · Task · Limits · Format",
+      model: {
+        base: [
+          ["Context", "The two or three case facts that change the answer."],
+          ["Task", "What you want produced."],
+          ["Limits", "What it must not say or promise. Name the knowledge article."],
+          ["Format", "Length, tone and channel."]
+        ]
+      },
+      example: {
+        label: "Same contact, two requests",
+        before: "Write a reply about a late fee.",
+        after: "Customer disputes a $39 late fee. Payment posted 2 days after the due date. Account in good standing, no waiver in the last 12 months. Draft a chat reply applying the courtesy waiver. Stay within KA-4417 and make no promises about future fees. Under 90 words, warm, plain language.",
+        note: "No name and no card number. The assistant does not need them for this job."
+      },
+      check: {
+        stem: "Which part is missing from this request? “Customer's dispute was declined because the merchant showed proof of delivery. Write a reply. Keep it under 100 words and friendly.”",
+        options: [
+          { t: "Context", ok: false, fb: "The case facts are there: a declined dispute and the reason." },
+          { t: "Task", ok: false, fb: "“Write a reply” is the task." },
+          { t: "Limits", ok: true, fb: "Nothing tells the assistant what it cannot offer, such as a goodwill credit or a second review. That gap is where over-promising comes from." },
+          { t: "Format", ok: false, fb: "Length and tone are both given." }
+        ]
+      },
+      stretch: {
+        stem: "A teammate's request has all four parts, but the drafts still come back generic. What is the most likely fix?",
+        options: [
+          { t: "Add “be more specific” to the request.", ok: false, fb: "The assistant cannot be specific about facts it was never given." },
+          { t: "Paste in the customer's full account history.", ok: false, fb: "More data is not better context, and it is more exposure." },
+          { t: "Give the two or three facts that change the answer, and name the knowledge article.", ok: true, fb: "Context means the facts that matter for this case. That is what turns a template into a reply." },
+          { t: "Regenerate until one version fits.", ok: false, fb: "Each version guesses from the same thin brief." }
+        ]
+      },
+      explain: {
+        ask: "In a sentence or two: why does telling the assistant its limits matter as much as telling it the task?",
+        ideas: [
+          { label: "ties limits to policy or the knowledge article", re: "polic|knowledge article|article|rule|allowed|guideline|ka-" },
+          { label: "names the risk of over-promising", re: "promis|commit|offer|guarantee|make up|invent|fill" },
+          { label: "connects it to the customer or to rework", re: "customer|trust|complain|rework|rewrite|fix|correct|deliver" }
+        ],
+        model: "Without limits the assistant fills gaps with whatever sounds helpful, including promises policy does not allow. Stating the limits keeps the draft inside what we can deliver."
+      },
+      tutor: [
+        { q: "Why not regenerate until the draft is good?", a: "Regenerating changes the wording, not the information the assistant has. If the request is missing the facts or the limits, every version guesses. Fix the brief once and the first draft is usually close.", ask: "What is one fact from your last contact that would have changed the draft?" },
+        { q: "How long should a request be?", a: "Long enough to carry the four parts, short enough to type during a contact. Two to four lines is typical. If you are writing a paragraph, you are probably pasting in more than the assistant needs.", ask: "Which of the four parts do you tend to leave out?" },
+        { q: "Should I include the customer's name?", a: "Not unless the task needs it. A reply drafted for “the customer” works as well, and you add the name yourself. Minimum necessary applies to prompts as much as to case notes.", ask: "What else do you paste out of habit that the assistant does not need?" }
+      ]
+    },
+
+    verify: {
+      title: "Verify before you send",
+      hook: {
+        agent: "Relay Assist writes fluent, confident sentences. Fluent is not the same as correct, and the customer cannot tell the difference. You can.",
+        backoffice: "A written response is a record. If an AI draft misstates a date or an amount, that error sits in the case file under your name.",
+        leader: "The most common QA failure in an AI rollout is a correct-sounding draft sent unchecked. Your agents need a check they can run in ten seconds."
+      },
+      modelName: "The ten-second check: Numbers · Promises · Fit",
+      model: {
+        base: [
+          ["Numbers", "Every amount and date matches the account screen."],
+          ["Promises", "Everything offered is in the knowledge article."],
+          ["Fit", "It answers what this customer asked."],
+          ["Then", "Fix it, or do not send it."]
+        ]
+      },
+      example: {
+        label: "One draft, checked",
+        before: "Your payment arrived on time, so I have removed the fee and this month's interest.",
+        after: "Numbers: wrong. The payment posted two days late. Promises: wrong. The waiver covers the fee, not interest. Fit: fine. Two fixes before this goes anywhere.",
+        note: "The draft read well. Both errors were in the details a customer would act on."
+      },
+      check: {
+        stem: "The draft says: “Your replacement card will arrive in 3 to 5 business days.” The knowledge article says 5 to 7. The customer travels on day 6. What do you do?",
+        options: [
+          { t: "Send it as written.", ok: false, fb: "The customer plans a trip around a date the article does not support." },
+          { t: "Change it to 5 to 7 days and mention the expedited option the article lists.", ok: true, fb: "Numbers corrected against the source, and the reply now fits what this customer needs." },
+          { t: "Delete the timeframe so you cannot be wrong.", ok: false, fb: "Removing the detail removes the answer the customer needs for their trip." },
+          { t: "Ask the assistant if it is sure.", ok: false, fb: "It will usually say yes. The article is the source, not the assistant." }
+        ]
+      },
+      stretch: {
+        stem: "Which draft is the riskiest to send unchecked?",
+        options: [
+          { t: "A greeting and an apology.", ok: false, fb: "Low risk. Nothing here can be factually wrong about the account." },
+          { t: "A summary of what the customer said.", ok: false, fb: "Worth a glance, but the customer is not acting on it." },
+          { t: "A reply with a fee amount, a date and what happens next.", ok: true, fb: "Every number and every promise is a place a confident error can hide." },
+          { t: "A closing line.", ok: false, fb: "Low risk." }
+        ]
+      },
+      explain: {
+        ask: "Explain to a new teammate why an AI draft that sounds right still needs checking.",
+        ideas: [
+          { label: "separates sounding right from being right", re: "sound|fluent|confiden|convinc|plausib|look|seem|read" },
+          { label: "names the source to check against", re: "account|knowledge article|article|source|polic|record|system|screen" },
+          { label: "names the consequence or who is accountable", re: "customer|wrong|error|mistake|accountab|responsib|complain|harm|my name" }
+        ],
+        model: "The assistant produces likely-sounding text. It does not know this customer's account. Numbers and promises have to match the account and the knowledge article, and the person who sends the reply is accountable for it."
+      },
+      tutor: [
+        { q: "Why does it get things wrong if it has the articles?", a: "It predicts likely wording from patterns. Even with the right article available it can blend details, use an older version, or fill a gap with something plausible. So the check is against the source, never against how sure the draft sounds.", ask: "On a fee reply, which would you check first: the amount, the date, or the promise?" },
+        { q: "Does checking cancel out the time saved?", a: "A targeted check takes about ten seconds: numbers, promises, fit. Rewriting from scratch takes minutes, and a wrong answer costs a repeat contact or a complaint. The check is what makes the saved time safe to keep.", ask: "Where in your day would ten seconds per contact be hardest to find?" },
+        { q: "What if I am not sure the draft is wrong?", a: "Then the article decides. If the article does not cover it, that is a question for your team leader, and worth flagging so the article gets updated.", ask: "When did you last find an article that did not cover a real case?" }
+      ]
+    },
+
+    protect: {
+      title: "Protect customer data",
+      hook: {
+        agent: "Customers overshare, especially when they are upset. What they type into chat does not have to end up in your prompt.",
+        backoffice: "Case files hold everything: statements, IDs, letters. The assistant needs a fraction of it to help you.",
+        leader: "Under time pressure your team will copy what you do, not what the policy slide said."
+      },
+      modelName: "Minimum necessary",
+      model: {
+        base: [
+          ["Approved tools only", "Customer information never goes into a personal or public AI app."],
+          ["Leave out", "Full card numbers, security codes, ID numbers, passwords. Never in a prompt."],
+          ["Describe, do not paste", "Give the facts of the case in your own words, not the raw record."],
+          ["Report early", "If data goes somewhere it should not, report it straight away."]
+        ]
+      },
+      example: {
+        label: "Pasting the record versus describing the case",
+        before: "[Full chat transcript pasted, including card number and date of birth]",
+        after: "Customer disputes a duplicate $64.10 charge from a grocery merchant on the 12th. One charge is pending, one has posted. Summarize the case in three lines for the dispute form.",
+        note: "Everything the assistant needs. Nothing that identifies the customer."
+      },
+      check: {
+        stem: "You want help summarizing a long dispute letter that includes the customer's card number and date of birth. What goes into the approved assistant?",
+        options: [
+          { t: "The whole letter. It is an approved tool.", ok: false, fb: "Approved covers the tool for a purpose. The summary does not need a card number or a date of birth." },
+          { t: "The letter with the card number and date of birth removed or masked.", ok: true, fb: "The assistant gets what the task needs and nothing else." },
+          { t: "Nothing. AI cannot be used on disputes.", ok: false, fb: "It can. The skill is choosing what it needs." },
+          { t: "A photo of the letter.", ok: false, fb: "A photo carries every sensitive detail with it." }
+        ]
+      },
+      stretch: {
+        stem: "A teammate says: “Relay Assist is approved, so anything in the case can go in.” What is the best correction?",
+        options: [
+          { t: "Approved means approved for the task, with the least data the task needs.", ok: true, fb: "Approval sets where you can work. Minimum necessary sets what you bring." },
+          { t: "That is right.", ok: false, fb: "Every extra copy of an identifier is one more place it can surface." },
+          { t: "Approved tools are still risky, so avoid them.", ok: false, fb: "Avoidance loses the benefit and usually pushes people toward unapproved tools." },
+          { t: "Only team leaders may paste case data.", ok: false, fb: "The rule is about the data, not the job title." }
+        ]
+      },
+      explain: {
+        ask: "In your own words: what does “minimum necessary” mean when you write a prompt?",
+        ideas: [
+          { label: "limits the prompt to what the task needs", re: "only|just|minimum|least|need|necessar|nothing (else|more)|no more" },
+          { label: "names identifiers to leave out", re: "card|security code|cvv|ssn|sensitive|personal|identif|date of birth|dob|id number|password" },
+          { label: "says how: approved tool, describe, mask or remove", re: "approved|describe|own words|mask|redact|leave out|remove|strip|without" }
+        ],
+        model: "Give the assistant only the facts the task needs, described in your own words, and leave out identifiers such as card numbers and security codes, even in an approved tool."
+      },
+      tutor: [
+        { q: "If the tool is approved, why does it matter what I paste?", a: "Approval covers the tool for a purpose. Every extra copy of a card number or an ID is one more place it can be logged or resurface in a summary. The assistant does not need it to draft a fee reply, so the safest copy is the one that is never made.", ask: "What is one detail you paste out of habit that the assistant does not need?" },
+        { q: "What counts as sensitive?", a: "Full card numbers, security codes, government ID numbers, passwords and one-time codes, full dates of birth, and health or hardship details beyond what the task needs. When unsure, describe the situation in place of pasting the record.", ask: "Which of those shows up most often in your contacts?" },
+        { q: "What if I already pasted something I should not have?", a: "Report it straight away through the incident process and tell your team leader. Early reports are routine and fixable. The ones that cause harm are the ones nobody mentioned.", ask: "Do you know where the incident form lives? Finding it now saves time later." }
+      ]
+    },
+
+    judge: {
+      title: "Own the judgment call",
+      hook: {
+        agent: "Relay Assist will suggest a next step on every contact. It has never been accountable for one.",
+        backoffice: "The assistant sees a case type. You see the person in the file and the detail that does not fit the pattern.",
+        leader: "Agents who over-trust the tool stop noticing exceptions. Agents who under-trust it never use it. Your job is the ground in between."
+      },
+      modelName: "Three triggers that make it your call",
+      model: {
+        base: [
+          ["Conflict", "The AI output disagrees with the policy or the account. Policy wins. Flag the mismatch."],
+          ["Vulnerability", "Job loss, illness, bereavement, distress. Follow the hardship procedure."],
+          ["Out of pattern", "Complaints, legal or regulator language, anything the article does not cover. Escalate."],
+          ["Always", "AI drafts. You decide."]
+        ]
+      },
+      example: {
+        label: "A suggestion that misses the point",
+        before: "Customer: “My husband passed away last month and I do not know what is on this account.” Assistant suggests: “Send balance summary.”",
+        after: "Trigger: vulnerability. This is a bereavement contact. Follow the bereavement procedure and slow down. A balance summary answers a question the customer did not ask.",
+        note: "The suggestion matched the words. It missed the situation."
+      },
+      check: {
+        stem: "Relay Assist's suggestion and the knowledge article disagree about whether a fee can be waived. Which do you follow?",
+        options: [
+          { t: "The assistant. It learns from more recent contacts.", ok: false, fb: "Recent patterns are not policy. The article is the authority." },
+          { t: "The knowledge article, and flag the mismatch.", ok: true, fb: "Policy wins, and the flag is how the tool gets corrected for everyone else." },
+          { t: "Whichever is better for the customer.", ok: false, fb: "Well meant, but two customers with the same case then get different answers." },
+          { t: "Neither. Transfer the contact.", ok: false, fb: "The article answers this one. A transfer adds wait time without adding judgment." }
+        ]
+      },
+      stretch: {
+        stem: "Which contact most needs your judgment over the AI's suggestion?",
+        options: [
+          { t: "A balance inquiry.", ok: false, fb: "Routine. The pattern fits." },
+          { t: "An address change.", ok: false, fb: "Routine, with a verification step the article covers." },
+          { t: "A customer who mentions a regulator and says they were treated unfairly.", ok: true, fb: "Regulator and fairness language is out of pattern. It needs a person and the complaints procedure." },
+          { t: "A payment date question.", ok: false, fb: "Routine. Check the date against the account." }
+        ]
+      },
+      explain: {
+        ask: "Explain why the final decision on a contact stays with a person, even when the assistant is usually right.",
+        ideas: [
+          { label: "names accountability", re: "accountab|responsib|own|answer for|my name" },
+          { label: "names what the assistant misses", re: "exception|vulnerab|hardship|context|does not fit|doesn't fit|unusual|judg|situation|pattern|human|person" },
+          { label: "points to policy or escalation", re: "polic|escalat|procedure|complain|article|rule" }
+        ],
+        model: "The assistant matches patterns. It is not accountable, and it misses exceptions such as hardship or a complaint. A person owns the outcome, applies policy to the case in front of them, and escalates when it does not fit."
+      },
+      tutor: [
+        { q: "Is the AI not usually right?", a: "Often, on routine contacts. The cost sits in the exceptions: a hardship signal handled as a fee question, a complaint closed as resolved. Those are rare, high impact, and exactly what pattern matching misses.", ask: "Which of the three triggers would be easiest to miss on a busy day?" },
+        { q: "Will I be marked down for overriding the AI?", a: "Following written policy over an AI suggestion is always the right call, and flagging the mismatch helps fix the tool. The risk runs the other way: sending something wrong because the assistant suggested it.", ask: "Have you seen a suggestion that conflicted with an article? What did you do?" },
+        { q: "When do I escalate instead of deciding?", a: "When the article does not cover the situation, when an exception needs approval, or when the customer uses complaint, legal or regulator language. Escalating with a clear summary is good judgment.", ask: "What would you put in a two-line escalation summary?" }
+      ]
+    },
+
+    improve: {
+      title: "Coach and close the loop",
+      hook: {
+        agent: "You will spot the tool's mistakes before anyone else does. What you do next decides whether the next agent hits the same one.",
+        backoffice: "You will spot the tool's mistakes before anyone else does. What you do next decides whether the next specialist hits the same one.",
+        leader: "Adoption does not come from the launch email. It comes from the conversations you have in week three, when the novelty has worn off."
+      },
+      modelName: { base: "Flag · Share · Ask", leader: "The coaching loop: Observe · Ask · Agree · Follow up" },
+      model: {
+        base: [
+          ["Flag", "Use the feedback control and say why the draft was wrong."],
+          ["Share", "Bring one thing that worked to the team huddle."],
+          ["Ask", "Tell your leader what gets in the way. That is data, not complaining."],
+          ["Why", "Your flag becomes a test case for the next release."]
+        ],
+        leader: [
+          ["Observe", "Watch real work. The dashboard shows what, not why."],
+          ["Ask", "Before telling: “Walk me through how you decided the draft was ready.”"],
+          ["Agree", "One specific habit, not five."],
+          ["Follow up", "Within a week, on real contacts."]
+        ]
+      },
+      example: {
+        base: {
+          label: "Feedback that gets acted on",
+          before: "Thumbs down.",
+          after: "Thumbs down, with: “Draft quoted a $35 late fee. The fee has been $39 since January. See KA-4417.”",
+          note: "The second one can be triaged in a minute. The first one waits."
+        },
+        leader: {
+          label: "Coaching that changes a habit",
+          before: "“You need to use the tool more.”",
+          after: "“On your next five fee contacts, try the four-part request. We will look at two of them together on Thursday.”",
+          note: "Specific, small, and it has a follow-up date."
+        }
+      },
+      check: {
+        base: {
+          stem: "Which feedback will get a wrong draft fixed?",
+          options: [
+            { t: "A thumbs down.", ok: false, fb: "No reason given, so there is nothing to act on." },
+            { t: "A thumbs down with: “Draft says replacement cards take 3 to 5 days. KA-2210 says 5 to 7.”", ok: true, fb: "What the draft said, what the source says, and where to look." },
+            { t: "Telling a teammate at lunch.", ok: false, fb: "It does not reach the people who can fix the source." },
+            { t: "Rewriting it and moving on.", ok: false, fb: "One customer helped. The error is still there for the next contact." }
+          ]
+        },
+        leader: {
+          stem: "An agent says: “I tried it in launch week and it was slower.” What is the most useful next move?",
+          options: [
+            { t: "Walk them through the productivity data.", ok: false, fb: "Data about other people does not answer their own experience." },
+            { t: "Sit with them for three live contacts and find where it slows them down.", ok: true, fb: "Observe first. The barrier is usually one specific step you can fix." },
+            { t: "Assign the e-learning again.", ok: false, fb: "They completed it once. The gap is in the work, not the course." },
+            { t: "Note it and move on.", ok: false, fb: "Launch-week impressions harden if nobody revisits them." }
+          ]
+        }
+      },
+      stretch: {
+        base: {
+          stem: "You found a request that gets excellent dispute summaries. What makes it most valuable?",
+          options: [
+            { t: "Keeping it to yourself so your numbers stay ahead.", ok: false, fb: "The team's quality is the measure, and it will be found anyway." },
+            { t: "Sharing it at the huddle with the case type it works for, so others can reuse and test it.", ok: true, fb: "A named case type makes it reusable, and other people's tests make it better." },
+            { t: "Posting it in a chat without context.", ok: false, fb: "Without the case type, people apply it where it does not fit." },
+            { t: "Sending it to the vendor.", ok: false, fb: "Your team and the knowledge owners are the right first audience." }
+          ]
+        },
+        leader: {
+          stem: "Team usage is high but QA accuracy on AI-assisted contacts is falling. What does that tell you?",
+          options: [
+            { t: "The rollout is working. Usage is the goal.", ok: false, fb: "Usage is a means. Accuracy is what customers feel." },
+            { t: "Adoption without the verify habit. Coach checking before celebrating usage.", ok: true, fb: "High use with falling accuracy is the pattern to catch early." },
+            { t: "The tool is broken and should be paused.", ok: false, fb: "Possible, but the first thing to rule out is drafts going out unchecked." },
+            { t: "QA is scoring too harshly.", ok: false, fb: "Check a sample before questioning the measure." }
+          ]
+        }
+      },
+      explain: {
+        base: {
+          ask: "Why is reporting a wrong AI draft part of your job, and not only fixing it?",
+          ideas: [
+            { label: "thinks beyond this one contact", re: "next|other|team|someone else|everyone|again|future|colleague" },
+            { label: "connects the report to the fix", re: "fix|improve|update|source|article|tool|correct|better|test" },
+            { label: "says to flag it with a reason", re: "flag|report|feedback|reason|tell|raise|why" }
+          ],
+          model: "Fixing it helps one customer. Flagging it with the reason gets the source corrected, so the error stops reaching every other agent and customer."
+        },
+        leader: {
+          ask: "Why observe live work before coaching an agent on AI use?",
+          ideas: [
+            { label: "values seeing the real work", re: "see|watch|observ|real|actual|live|side by side|sit with" },
+            { label: "looks for the cause, not the symptom", re: "barrier|in the way|slow|why|reason|cause|habit|process|step" },
+            { label: "leads to specific coaching", re: "specific|one habit|target|agree|tailor|assum|guess|precise" }
+          ],
+          model: "The dashboard shows what is happening, not why. Watching real contacts shows the actual barrier, so the coaching targets one specific habit and does not rely on guesses."
+        }
+      },
+      tutor: [
+        { q: "What if my feedback gets ignored?", a: "Give it in the form that is hardest to ignore: what the draft said, what the source says, and the article number. Then raise the pattern with your team leader. Specific flags get triaged. Vague ones wait.", ask: "What was the last wrong draft you saw, and could you state it in that form?" },
+        { q: "How do I talk to a skeptical teammate?", a: "Start from their experience, not the benefits. Ask what happened when they tried it. One real barrier removed does more than ten statistics.", ask: "Who on your team would you ask first, and what would you ask?" },
+        { q: "How do I coach someone who is better at the job than I am with AI?", a: "Ask them to teach it. “Show me how you would use it on this contact” surfaces what they know and where the tool lets them down. Pair them with a newer agent and both improve.", ask: "Who is that person on your team?" }
+      ]
+    }
+  };
+
+  /* General tutor answers, matched by keyword when the learner types a free question in guided mode. */
+  var tutorGeneral = [
+    { k: ["hallucinat", "make up", "makes up", "invent", "wrong", "mistake", "accura"], a: "Generative AI predicts likely text. Most of the time that is useful. Sometimes it produces a confident sentence that is not true for this account or this policy. That is why every draft gets the ten-second check: numbers, promises, fit." },
+    { k: ["replace", "my job", "lose my job", "redundan", "laid off"], a: "In this rollout the assistant drafts and summarizes. The decisions, the customer relationship and the accountability stay with people. The skills in this path, checking, judgment and coaching, are the ones the tool cannot do." },
+    { k: ["15", "fifteen", "minute", "short", "how long", "time"], a: "The path is built for fifteen minutes because that fits between contacts or inside a huddle. The diagnostic decides where those minutes go, so you spend them on your gaps and skip what you already do well." },
+    { k: ["relay assist", "what is relay", "the tool", "copilot", "assistant do"], a: "Relay Assist is the fictional agent-assist tool in this lab. It drafts replies, summarizes contacts and suggests next steps from the knowledge base. It is a stand-in for whatever approved assistant your team uses." },
+    { k: ["prompt", "request", "brief", "ask it"], a: "A good request has four parts: context, task, limits and format. Limits is the one most people skip, and it is the one that stops over-promising." },
+    { k: ["pii", "card number", "cvv", "security code", "sensitive", "privacy", "data", "paste"], a: "Minimum necessary. Approved tools only, and even there leave out card numbers, security codes and ID numbers. Describe the case in your own words in place of pasting the record." },
+    { k: ["escalat", "hardship", "complain", "vulnerab", "regulator"], a: "Three triggers make it your call: the AI conflicts with policy, the customer shows vulnerability, or the contact is out of pattern, such as a complaint or regulator language. Follow the written procedure, whatever the assistant suggests." },
+    { k: ["trust", "rely", "depend", "sure"], a: "Trust the assistant for a first draft. Trust the account screen and the knowledge article for the facts. If they disagree, the source wins and the mismatch gets flagged." },
+    { k: ["slow", "faster", "quick", "handle time", "aht"], a: "The time saving comes from a good first draft plus a ten-second check. Skipping the check looks faster until a wrong answer comes back as a repeat contact or a complaint." },
+    { k: ["coach", "team", "leader", "huddle", "adopt"], a: "Adoption follows coaching, not announcements. Observe real work, ask before telling, agree one habit, and follow up within a week." },
+    { k: ["score", "assess", "grade", "result", "pass"], a: "Your scorecard compares the diagnostic with what you do in the lessons and the simulation. Every score links to the evidence behind it, so you can see exactly which action earned or cost points." }
+  ];
+
+  /* ---------- Simulations ---------- */
+  var simFrontline = {
+    id: "frontline",
+    title: { agent: "Live contact: the late fee", backoffice: "Case queue: the late fee" },
+    intro: {
+      agent: "You are on chat with a cardholder. Relay Assist is open beside the conversation. Every decision here is scored against the five competencies.",
+      backoffice: "A secure message has landed in your queue. Relay Assist is open beside the case. Every decision here is scored against the five competencies."
+    },
+    caseFile: {
+      heading: "Case file",
+      customer: { agent: "Dana R. · Cardholder since 2019 · Chat", backoffice: "Dana R. · Cardholder since 2019 · Secure message" },
+      facts: [
+        ["Statement due", "March 3"],
+        ["Payment posted", "March 5, $182.40"],
+        ["Late fee", "$39, charged March 4"],
+        ["Standing", "Good"],
+        ["Last courtesy waiver", "14 months ago"]
+      ],
+      articles: [
+        {
+          id: "KA-4417", title: "Late fee courtesy waiver",
+          lines: [
+            "One courtesy waiver per rolling 12 months.",
+            "Account in good standing, payment received within 5 days of the due date.",
+            "The waiver covers the late fee only. It does not change interest or future fees.",
+            "The credit appears within 2 billing cycles.",
+            "A second waiver inside 12 months needs team leader approval."
+          ]
+        },
+        {
+          id: "KA-5102", title: "Hardship and complaints",
+          lines: [
+            "Any mention of job loss, illness or inability to pay: offer the Hardship Support referral.",
+            "Any request to make a formal complaint: log it in the complaints tool before the contact closes."
+          ]
+        }
+      ]
+    },
+    stages: [
+      {
+        id: "s1", type: "choice", comp: { protect: 1 }, label: "Customer shares card details",
+        scene: [
+          { who: "Dana", text: "I paid on time and you charged me $39 anyway. Here is my card so you can see it is me: 4539 •••• •••• 1127, exp 08/27, code 3••" },
+          { who: "note", text: "Shown masked here. Dana typed the full number and security code." }
+        ],
+        ask: "You were about to ask Relay Assist to summarize the conversation. What do you do?",
+        options: [
+          { t: "Paste the full conversation into Relay Assist. It is an approved tool.", s: 0, fb: "Approved does not mean unlimited. The assistant does not need a card number to summarize a fee question, and a security code should never be stored anywhere." },
+          { t: "Ask Dana not to share card details here, verify through the standard steps, start the redaction step, and keep those details out of your prompt.", s: 1, fb: "Minimum necessary. You verified through the proper route, protected the customer, and kept the details out of the AI tool." },
+          { t: "Say nothing about it. Keep the card details out of your prompt and carry on.", s: 0.5, fb: "Keeping it out of the prompt matters. But the unredacted number is still in the transcript, and Dana will do it again." },
+          { t: "Copy the conversation into a personal AI app. It summarizes faster.", s: 0, fb: "Customer data never goes into a tool that is not approved. This one is a reportable incident." }
+        ],
+        hint: "Two questions: does the assistant need this detail to do the task, and what should happen to sensitive data already in the transcript?"
+      },
+      {
+        id: "s2", type: "prompt", comp: { prompt: 1 }, label: "Brief Relay Assist",
+        scene: [{ who: "note", text: "Dana is verified. You want a first draft of the reply." }],
+        ask: "Write the request you would give Relay Assist. Use the case file.",
+        placeholder: "Type your request to Relay Assist…",
+        criteria: [
+          { id: "context", label: "Context", re: "(late|fee|\\$ ?39).*(posted|2 days|two days|after|late|good standing|12 months|14 months|waiver)|(posted|2 days|two days|good standing|12 months|14 months).*(fee|late)", tip: "Add the facts that change the answer: payment posted two days late, good standing, no waiver in 12 months." },
+          { id: "task", label: "Task", re: "draft|write|reply|respond|response|message|compose", tip: "Say what you want produced, such as a chat reply." },
+          { id: "limits", label: "Limits", re: "ka-? ?4417|knowledge article|polic|only|do not|don't|dont|no promis|never|must not|avoid|stay within|stick to|without promis", tip: "Tell it what it must not promise. Naming KA-4417 does this in three words." },
+          { id: "format", label: "Format", re: "short|brief|under \\d+|\\d+ words|sentence|warm|empath|plain|friendly|tone|concise|polite|apolog", tip: "Give a length and a tone." }
+        ],
+        model: "Customer disputes a $39 late fee. Payment posted 2 days after the due date. Account in good standing, last courtesy waiver 14 months ago. Draft a chat reply applying the courtesy waiver. Stay within KA-4417: fee only, no promises about interest or future fees. Under 90 words, warm, plain language.",
+        hint: "Four parts: context, task, limits, format. The case file has every fact you need. The customer's card number is not one of them."
+      },
+      {
+        id: "s3", type: "flag", comp: { verify: 1 }, label: "Check the draft",
+        scene: [{ who: "note", text: "Relay Assist returned this draft." }],
+        ask: "Select every sentence you would change before sending. Check each one against the case file.",
+        segments: [
+          { t: "Hi Dana, thanks for getting in touch, and I am sorry for the stress this fee has caused.", bad: false },
+          { t: "I can see your payment was received on time.", bad: true, why: "Numbers. The payment posted March 5, two days after the due date." },
+          { t: "Because your account is in good standing and you have not had a courtesy waiver in the last 12 months, I have removed the $39 late fee.", bad: false },
+          { t: "I have also refunded the interest charged this month.", bad: true, why: "Promises. KA-4417 covers the late fee only." },
+          { t: "You will see the credit within two billing cycles.", bad: false },
+          { t: "Going forward, any late fees on your account will be waived automatically.", bad: true, why: "Promises. One waiver per 12 months. This cannot be delivered." },
+          { t: "Is there anything else I can help you with today?", bad: false }
+        ],
+        hint: "Run the ten-second check on each sentence: numbers against the account, promises against KA-4417."
+      },
+      {
+        id: "s4", type: "choice", comp: { judge: 1 }, label: "The contact changes",
+        scene: [
+          { who: "Dana", text: "Thank you. This is the third time a payment has posted late on your side and I want to make a formal complaint. I lost my job in January and I am struggling to keep up." },
+          { who: "assist", text: "Next best action: confirm the waiver and close the contact." }
+        ],
+        ask: "What do you do?",
+        options: [
+          { t: "Follow the suggestion. The fee is resolved and handle time is already long.", s: 0, fb: "The fee was only part of what Dana said. Two triggers in KA-5102 were missed: a formal complaint and a hardship signal." },
+          { t: "Log the formal complaint, offer the Hardship Support referral, then confirm the waiver. Treat the suggestion as incomplete.", s: 1, fb: "Both triggers handled by the written procedure. The assistant matched the fee pattern and missed the person." },
+          { t: "Ask Relay Assist whether this counts as hardship, and follow its answer.", s: 0, fb: "The trigger is written in KA-5102. You do not need the assistant's permission to follow it, and it cannot be accountable for the outcome." },
+          { t: "Offer the Hardship Support referral and close. The complaint was about the fee, which is fixed.", s: 0.5, fb: "Hardship handled well. But Dana asked to make a formal complaint, and that must be logged whether or not the fee is fixed." }
+        ],
+        hint: "Read Dana's message again against KA-5102. How many triggers are in it?"
+      },
+      {
+        id: "s5", type: "choice", comp: { improve: 1 }, label: "After the contact",
+        scene: [{ who: "note", text: "The contact is closed. The draft from Relay Assist contained three errors." }],
+        ask: "What do you do next?",
+        options: [
+          { t: "Nothing. The errors were caught, so no harm done.", s: 0, fb: "You caught them. The next person might not. Unreported errors stay in the tool." },
+          { t: "Flag the draft with the reason using the feedback control, and raise the pattern at the team huddle.", s: 1, fb: "This is how the tool and the training improve. Your flag becomes a test case for the next release." },
+          { t: "Stop using Relay Assist on fee contacts.", s: 0, fb: "Avoiding the tool hides the problem and gives up the time saved where it works." },
+          { t: "Message a couple of teammates to watch out for it.", s: 0.5, fb: "Useful for those teammates. It does not reach the people who can fix the source." }
+        ],
+        hint: "Who can fix the source of the error, and what do they need from you to do it?"
+      }
+    ]
+  };
+
+  var simLeader = {
+    id: "leader",
+    title: { leader: "Week four: coach through the dip" },
+    intro: { leader: "You lead 14 agents. Relay Assist launched four weeks ago. You have 30 minutes of coaching time today. Every decision here is scored against the five competencies." },
+    caseFile: {
+      heading: "Team snapshot",
+      customer: { leader: "Your team · 14 agents · Rollout week 4" },
+      facts: [
+        ["Contacts using Relay Assist", "46% (site average 63%)"],
+        ["QA this week", "3 contacts with an AI draft sent unedited, each with a policy error"],
+        ["All three from", "Marcus T., your highest user"],
+        ["Not using it", "Priya N., 6 years in role, top-quartile QA"],
+        ["Handle time", "Down 9% since launch"]
+      ],
+      articles: [
+        {
+          id: "CG-12", title: "Coaching guide",
+          lines: [
+            "Observe the work before you discuss it.",
+            "Ask before telling.",
+            "Agree one specific habit.",
+            "Follow up within a week, on real contacts."
+          ]
+        },
+        {
+          id: "AI-03", title: "Approved tools",
+          lines: [
+            "Customer information goes only into approved tools.",
+            "Never paste account details or customer messages into a public AI app.",
+            "If it happens, report it through the incident process the same day."
+          ]
+        }
+      ]
+    },
+    stages: [
+      {
+        id: "l1", type: "choice", comp: { judge: 1 }, label: "Where to start",
+        scene: [{ who: "note", text: "Two people need your time. You can see one properly today." }],
+        ask: "Where do you start?",
+        options: [
+          { t: "Email the team a reminder to use Relay Assist, with the launch training attached.", s: 0, fb: "Reminders do not change habits, and the QA errors go untouched." },
+          { t: "Marcus. Unedited drafts with policy errors are reaching customers now.", s: 1, fb: "Customer impact sets the order. Low usage is a slow problem. Wrong information sent to customers is today's problem." },
+          { t: "Priya. She is the biggest adoption gap.", s: 0.5, fb: "Worth doing this week. But Priya's customers are getting accurate answers. Marcus's are not." },
+          { t: "Set a team target of 70% usage by Friday.", s: 0, fb: "A usage target with no quality check rewards exactly what Marcus is doing." }
+        ],
+        hint: "Which of the two situations is affecting customers right now?"
+      },
+      {
+        id: "l2", type: "choice", comp: { improve: 1 }, label: "Open the conversation",
+        scene: [{ who: "note", text: "You sit down with Marcus." }],
+        ask: "How do you open?",
+        options: [
+          { t: "“Three of your contacts failed QA this week. That cannot happen again.”", s: 0, fb: "Accurate, and it shuts the conversation down. You get compliance while you are watching and nothing after." },
+          { t: "“Pull up one of this week's fee contacts and walk me through how you decided the draft was ready to send.”", s: 1, fb: "Observe, then ask. You see his real process, and he finds the gap himself." },
+          { t: "“Your usage is the best on the team. Keep it up.”", s: 0, fb: "True, and it avoids the reason you are here." },
+          { t: "“I am moving you back to manual drafting until QA improves.”", s: 0, fb: "It removes the risk and the learning. He is your most willing adopter." }
+        ],
+        hint: "CG-12 gives the order: observe, ask, agree, follow up."
+      },
+      {
+        id: "l3", type: "choice", comp: { verify: 1 }, label: "The pushback",
+        scene: [{ who: "Marcus", text: "The drafts are right nearly every time. Checking each one eats the time I am saving." }],
+        ask: "What do you do?",
+        options: [
+          { t: "Agree one habit: before sending, check every amount, date and promise against the account and the article. Review three contacts together next week.", s: 1, fb: "Specific, quick to do, and it has a follow-up. This is the ten-second check turned into a habit." },
+          { t: "Tell him to read every draft twice.", s: 0.5, fb: "More checking, but not targeted. Reading twice does not tell him what to look for." },
+          { t: "Tell him to stop using Relay Assist on fee contacts.", s: 0, fb: "It gives up the benefit and teaches the team that mistakes get the tool taken away." },
+          { t: "Accept it. His handle time is the best on the team.", s: 0, fb: "Handle time falling while accuracy falls is not readiness." }
+        ],
+        hint: "What would a check look like that takes ten seconds and targets where the errors were?"
+      },
+      {
+        id: "l4", type: "prompt", comp: { prompt: 1 }, label: "Prepare for Priya",
+        scene: [{ who: "note", text: "Priya is next. You want help preparing, using your approved assistant." }],
+        ask: "Write the request you would give the assistant to help you prepare for the conversation with Priya.",
+        placeholder: "Type your request to the assistant…",
+        criteria: [
+          { id: "context", label: "Context", re: "experienc|tenure|6 years|six years|senior|top|strong qa|high qa|has not|hasn't|not us|not open|stopped|slow|skeptic|sceptic|relucta|launch", tip: "Describe the situation: an experienced, high-quality agent who has not used the tool since launch week." },
+          { id: "task", label: "Task", re: "prepare|plan|question|coach|conversation|draft|outline|agenda|suggest|help me", tip: "Say what you want: questions to ask, or a plan for the conversation." },
+          { id: "limits", label: "Limits", re: "do not|don't|dont|avoid|no |not a script|without|open question|not tell|rather than tell|ask before|non-?judg|no pressure|no target", tip: "Set limits: open questions, no script, no usage targets." },
+          { id: "format", label: "Format", re: "bullet|list|short|\\d+ (question|minute|point)|five|three|four|one page|step|brief|concise", tip: "Give a format, such as five questions for a 15-minute conversation." }
+        ],
+        nameCheck: "priya",
+        model: "I lead a contact center team four weeks into an AI assistant rollout. One experienced agent with top-quartile quality has not used the tool since launch week and says it slows her down. Help me prepare a 15-minute coaching conversation. Give me five open questions that explore what gets in her way. No script, no usage targets, nothing that sounds like a performance warning. Bullets.",
+        hint: "Context, task, limits, format. You can describe the situation without naming the person."
+      },
+      {
+        id: "l5", type: "choice", comp: { protect: 1 }, label: "An honest admission",
+        scene: [{ who: "Priya", text: "Honestly, I draft faster with the AI app on my phone. I paste the customer's message in and tidy up what comes back." }],
+        ask: "What do you do?",
+        options: [
+          { t: "Thank her for telling you, stop the practice today, explain why, report it through the incident process, and show her the same steps in Relay Assist.", s: 1, fb: "Stop, explain, report, replace. Reporting protects Priya as well as the customer, and she leaves with a way to keep the speed." },
+          { t: "Tell her to stop, and leave it there. She meant well.", s: 0.5, fb: "Stopping it is right. But customer data has already left approved systems, and AI-03 requires a report the same day." },
+          { t: "Let it go. Her quality scores are excellent.", s: 0, fb: "Good outcomes do not make an unapproved tool acceptable. The exposure is the issue." },
+          { t: "Ask which app it is so the rest of the team can try it.", s: 0, fb: "That spreads the exposure across the team." }
+        ],
+        hint: "AI-03 has three lines. Which ones apply to what Priya just said?"
+      },
+      {
+        id: "l6", type: "choice", comp: { improve: 1 }, label: "Report readiness",
+        scene: [{ who: "Ops manager", text: "Quick one before the review. Is your team ready?" }],
+        ask: "What do you bring?",
+        options: [
+          { t: "Usage: 46% of contacts, up from 31%.", s: 0.5, fb: "Usage shows the tool is being opened. It does not show whether customers are getting better answers." },
+          { t: "Usage, QA accuracy on AI-assisted contacts, what agents say gets in the way, and the two habits you are coaching this week.", s: 1, fb: "Adoption, quality, barriers and action. That is a readiness picture a manager can act on." },
+          { t: "Nothing yet. Wait until the numbers look better.", s: 0, fb: "Early, honest numbers get you help. Late good news gets you questions." },
+          { t: "Handle time is down 9%.", s: 0.5, fb: "Worth reporting, alongside quality. Speed without accuracy is not readiness." }
+        ],
+        hint: "Readiness has more than one measure. What would tell her that customers are better off?"
+      }
+    ]
+  };
+
+  /* ---------- Coaching content ---------- */
+  var practice = {
+    prompt: {
+      rep: { base: "On your next five contacts, write the request in four parts before you send it. Count how many first drafts you could use with light edits.", leader: "Review five requests your agents wrote this week. For each one, name the missing part and show the rewrite." },
+      leaderAsk: ["Show me the last request you gave the assistant. Which of the four parts is in it?", "What happened to the draft when you added limits?", "Which contact type gives you the weakest drafts?"],
+      huddle: "Put one weak request on screen. Ask the team to name the missing part, then rewrite it together in under two minutes."
+    },
+    verify: {
+      rep: { base: "On your next five AI drafts, say the check out loud or in your head: numbers, promises, fit. Note every correction you make.", leader: "Pull three AI-assisted contacts from QA this week. Walk through numbers, promises and fit with the agent who handled each one." },
+      leaderAsk: ["Walk me through how you decided this draft was ready to send.", "What did you check it against?", "What would have happened if this sentence had gone out as written?"],
+      huddle: "Show one real draft with a planted error. First person to find it explains which check caught it."
+    },
+    protect: {
+      rep: { base: "For one shift, before each request to the assistant, ask: does it need this detail to do the task? Describe the case in your own words.", leader: "Run the needed-or-not drill in this week's huddle, and check that every agent knows where the incident form is." },
+      leaderAsk: ["What did you leave out of that request, and why?", "What would you do if a customer typed a card number into chat?", "Where is the incident form, and when would you use it?"],
+      huddle: "Read out three details from a case. For each one the team answers: needed in the prompt, or not?"
+    },
+    judge: {
+      rep: { base: "For one shift, note every contact where one of the three triggers appeared: conflict, vulnerability, out of pattern. Bring one to your next one-to-one.", leader: "Ask each agent for one contact this week where they did not follow the AI suggestion. Talk through which trigger it was." },
+      leaderAsk: ["Tell me about a contact this week where you did not follow the suggestion.", "Which trigger was it?", "What would make it easier to escalate when you are unsure?"],
+      huddle: "Read a customer message aloud. The team calls out the trigger and the procedure it leads to."
+    },
+    improve: {
+      rep: { base: "Flag at least two drafts this week with a reason that names what the draft said and what the source says.", leader: "Sit with two agents for three live contacts each this week. Ask before telling, agree one habit with each, and book the follow-up." },
+      leaderAsk: ["What is the last thing you flagged, and what happened to it?", "What gets in your way when you use the tool?", "What is one thing that works that the team should know about?"],
+      huddle: "Each person shares one request that worked and the contact type it worked for. Capture them in the team notes."
+    }
+  };
+
+  var coachSteps = [
+    { id: "goal", label: "Goal", ask: function (c) { return "Your priority area is “" + c.name + "”. What would good look like on your next shift?"; }, reflect: "That is specific enough to notice when it happens." },
+    { id: "reality", label: "Reality", ask: function () { return "What happens today that gets in the way of that?"; }, reflect: "Naming the barrier is most of the work. It is usually one step, not the whole job." },
+    { id: "options", label: "Options", ask: function () { return "What is one small thing you could try on your next five contacts?"; }, reflect: "Small and countable. That is what makes it likely to happen." },
+    { id: "will", label: "Commitment", ask: function () { return "Who will you tell, and when will you check how it went?"; }, reflect: "A named person and a date turn an intention into a plan." }
+  ];
+
+  /* ---------- Synthetic adoption data: 12 weeks, 5 sites, 3 roles ---------- */
+  var sites = [
+    { id: "harbor", name: "Harbor Point", rate: 0.34, cap: 0.93, skill: 4 },
+    { id: "lakeside", name: "Lakeside", rate: 0.3, cap: 0.9, skill: 2 },
+    { id: "ridgeview", name: "Ridgeview", rate: 0.2, cap: 0.82, skill: -5 },
+    { id: "southgate", name: "Southgate", rate: 0.26, cap: 0.88, skill: 0 },
+    { id: "virtual", name: "Virtual team", rate: 0.23, cap: 0.86, skill: -2 }
+  ];
+  var cohortRoles = [
+    { id: "agent", name: "Contact center agents", share: 0.65, lift: 1 },
+    { id: "backoffice", name: "Back-office specialists", share: 0.26, lift: 0.88 },
+    { id: "leader", name: "Team leaders", share: 0.09, lift: 1.08 }
+  ];
+  var headcount = { harbor: 620, lakeside: 540, ridgeview: 460, southgate: 430, virtual: 350 };
+
+  function buildCohorts() {
+    var out = [];
+    sites.forEach(function (s, si) {
+      cohortRoles.forEach(function (r, ri) {
+        var n = Math.round(headcount[s.id] * r.share);
+        var weeks = [];
+        for (var w = 1; w <= 12; w++) {
+          var wobble = Math.sin((w + si * 2 + ri) * 1.3) * 0.012;
+          var activated = Math.min(s.cap, s.cap * (1 - Math.exp(-s.rate * 1.25 * w)) + wobble);
+          var completed = activated * Math.min(0.94, 0.55 + 0.035 * w) * r.lift;
+          var active = completed * Math.min(0.9, 0.5 + 0.034 * w + wobble * 2) * r.lift;
+          var proficient = completed * Math.min(0.8, 0.12 + 0.052 * w) * r.lift;
+          weeks.push({
+            w: w,
+            activated: Math.round(n * Math.min(1, activated)),
+            completed: Math.round(n * Math.min(1, completed)),
+            active: Math.round(n * Math.min(1, active)),
+            proficient: Math.round(n * Math.min(1, proficient))
+          });
+        }
+        var comp = {};
+        var base = { prompt: 78, verify: 71, protect: 84, judge: 74, improve: 66 };
+        Object.keys(base).forEach(function (k, ki) {
+          var adj = s.skill + (r.id === "leader" ? (k === "improve" ? 9 : 2) : 0) + (r.id === "backoffice" ? (k === "protect" ? 3 : -2) : 0);
+          comp[k] = Math.max(40, Math.min(96, base[k] + adj + ((si * 3 + ki * 5 + ri) % 5) - 2));
+        });
+        out.push({ site: s.id, role: r.id, n: n, weeks: weeks, comp: comp, daysToProficient: Math.round(31 - s.skill * 0.9 + (r.id === "backoffice" ? 4 : 0)) });
+      });
+    });
+    return out;
+  }
+
+  var outcomes = [
+    { metric: "QA accuracy on AI-assisted contacts", before: 91.2, after: 96.4, dp: 1, suffix: "%", dUnit: " pts", better: "up" },
+    { metric: "Average handle time", before: 412, after: 371, dp: 0, suffix: " sec", dUnit: " sec", better: "down" },
+    { metric: "First-contact resolution", before: 71.0, after: 75.8, dp: 1, suffix: "%", dUnit: " pts", better: "up" },
+    { metric: "Escalations routed correctly", before: 83.1, after: 90.6, dp: 1, suffix: "%", dUnit: " pts", better: "up" },
+    { metric: "Agent confidence with the tool, 1 to 5", before: 2.9, after: 4.1, dp: 1, suffix: "", dUnit: "", better: "up" },
+    { metric: "Complaints per 1,000 contacts", before: 4.1, after: 3.4, dp: 1, suffix: "", dUnit: "", better: "down" }
+  ];
+
+  var teams = [
+    { team: "Ridgeview 7", site: "ridgeview", lead: "T. Okafor", use: 31, qa: 89.4, signal: "Low use, low confidence", status: "crit", play: "Leader sits side by side for three live contacts per agent, then one habit each." },
+    { team: "Virtual 3", site: "virtual", lead: "M. Alvarez", use: 74, qa: 88.1, signal: "High use, accuracy falling", status: "crit", play: "Run the verify huddle. QA samples AI-assisted contacts for two weeks." },
+    { team: "Southgate 2", site: "southgate", lead: "J. Brandt", use: 44, qa: 95.9, signal: "Strong quality, slow adoption", status: "warn", play: "Pair the two most experienced agents with daily users for a week." },
+    { team: "Ridgeview 4", site: "ridgeview", lead: "S. Lindqvist", use: 39, qa: 93.0, signal: "Leader has not completed coaching sprint", status: "warn", play: "Leader completes the coaching sprint, then a peer leader shadows one huddle." },
+    { team: "Lakeside 9", site: "lakeside", lead: "R. Chen", use: 58, qa: 94.2, signal: "Three unapproved-tool reports", status: "warn", play: "Protect sprint for the whole team. Show the approved route for the same task." },
+    { team: "Harbor Point 5", site: "harbor", lead: "A. Mensah", use: 83, qa: 97.6, signal: "Exemplar team", status: "good", play: "Capture their requests library and share it across sites." }
+  ];
+
+  var experiments = [
+    { name: "15-minute sprints vs one 60-minute class", result: "Completion 81% vs 54%. Proficiency at day 30: 62% vs 47%.", decision: "Adopted sprints as the default format.", n: "640 associates, 2 sites" },
+    { name: "Leader-led huddle after each sprint", result: "Weekly use on live contacts 71% vs 58% without a huddle.", decision: "Added a five-minute huddle script to every sprint.", n: "38 teams" },
+    { name: "Nudge at shift start vs after first break", result: "Sprint starts 44% vs 61%.", decision: "Moved the nudge to after first break.", n: "1,120 associates" }
+  ];
+
+  /* ---------- Blueprint content ---------- */
+  var traceability = [
+    { need: "Design and implement a training, change management and adoption agenda for AI in daily work", here: "The whole path: diagnose, learn, apply, measure, coach", scale: "One sprint template reused across contact types and sites" },
+    { need: "Operational AI readiness for call center agents, back-office agents and frontline leaders", here: "Three role lenses change the scenarios, the simulation and the coaching", scale: "Role packs maintained with operations subject experts" },
+    { need: "Coaching toolkits and change enablement resources for team leaders", here: "Leader simulation, conversation guides, huddle scripts and a commitment card", scale: "Toolkits delivered with each sprint and tied to team-level data" },
+    { need: "Align AI enablement with business OKRs and governance", here: "Adoption analytics pairs usage with quality, escalation and complaint measures", scale: "Readiness scorecard reviewed with accountable executives each month" },
+    { need: "Reuse scalable enterprise assets while tailoring for the frontline", here: "Five shared competencies, with frontline scenarios layered on top", scale: "Enterprise AI fluency content as the base, operations cases as the wrapper" },
+    { need: "Iteration, experimentation and continuous feedback loops", here: "Experiment log, learner flags and evidence-linked scoring", scale: "Monthly content release driven by flags, QA findings and test results" },
+    { need: "AI fluency and prompt engineering concepts", here: "Scored prompt-writing task, AI tutor, draft verification exercise", scale: "Prompt patterns library owned jointly with the tool's product team" }
+  ];
+
+  var plan = [
+    { when: "Days 1 to 30", title: "Listen and baseline", items: ["Shadow agents and leaders at two sites", "Agree readiness measures with operations and risk", "Baseline the five competencies with a short diagnostic", "Review existing enterprise AI learning assets for reuse"] },
+    { when: "Days 31 to 60", title: "Pilot and learn", items: ["Pilot three sprints with four teams", "Train leaders on the coaching loop before their teams start", "Run two format experiments", "Stand up the readiness scorecard"] },
+    { when: "Days 61 to 90", title: "Scale what worked", items: ["Roll out by site in waves, leaders first", "Monthly content release from flags and QA findings", "Report adoption with quality, never usage alone", "Hand exemplar teams a requests library to share"] }
+  ];
+
+  var governance = [
+    ["Human in the loop", "AI drafts and suggests. A person decides and is accountable for what is sent."],
+    ["Approved tools only", "Learning content never asks for customer data. Simulations use invented cases."],
+    ["Tested before release", "Tutor and simulation answers get tested against source policy before each release, including cases where written guidance conflicts."],
+    ["Transparent scoring", "Rule-based rubrics, with the evidence shown to the learner. AI adds commentary, never the score."],
+    ["Accessible by design", "Keyboard operable, readable at phone width, light and dark themes, plain language."],
+    ["Privacy of learner data", "Individual results go to the learner and their leader. Executives see cohorts."]
+  ];
+
+  var measures = [
+    ["Reaction", "Was it worth the time?", "Sprint rating, completion, drop-off point"],
+    ["Learning", "Can they do it here?", "Pre and post competency scores, simulation results"],
+    ["Behavior", "Do they do it on live work?", "Weekly use on contacts, flags raised, QA on AI-assisted contacts"],
+    ["Results", "Is the business better off?", "Accuracy, handle time, first-contact resolution, complaints"]
+  ];
+
+  var about = {
+    name: "Vincent Gibson",
+    line: "Operations leader in workforce learning, change management and applied generative AI",
+    linkedin: "https://www.linkedin.com/in/vincent-g-098b6741",
+    points: [
+      ["Adaptive AI tutoring", "Designed a generative AI tutor prompt that offers a 15-minute learning option, adapts examples to the learner\u2019s experience, checks understanding and asks learners to explain or apply what they learned."],
+      ["Tested AI guidance", "Co-developed a donation-workflow assistant and a policy chatbot for the CARITAS Furniture Bank team practicum. All 12 test cases passed, including escalation when written guidance conflicted."],
+      ["Coaching that moved numbers", "Introduced manager coaching and peer-led training in a 50-person division. Internal customer satisfaction rose from 43% to 69% and turnover fell 87%."],
+      ["Change at scale", "Aligned six newly reorganized divisions with more than 150 staff, using one-to-one conversations and weekly 30-minute check-ins."],
+      ["Credentials", "Georgetown Certificate in Leadership Coaching. M.S. Business Analytics and M.S. Management of IT, University of Virginia. Six Sigma Black Belt."]
+    ]
+  };
+
+  window.LAB = {
+    competencies: competencies, roles: roles, experience: experience, roleWeights: roleWeights,
+    diagnostic: diagnostic, lessons: lessons, tutorGeneral: tutorGeneral,
+    sims: { frontline: simFrontline, leader: simLeader },
+    practice: practice, coachSteps: coachSteps,
+    sites: sites, cohortRoles: cohortRoles, cohorts: buildCohorts(),
+    outcomes: outcomes, teams: teams, experiments: experiments,
+    traceability: traceability, plan: plan, governance: governance, measures: measures, about: about
+  };
+})();
+
+</script>
+<script>
+/* Frontline AI Readiness Lab: application logic.
+   Plain JavaScript, no build step. State lives in memory and is mirrored to
+   localStorage as a convenience so a reviewer can close the tab and resume. */
+(function () {
+  "use strict";
+
+  const L = window.LAB;
+  const view = document.getElementById("view");
+  const tabsEl = document.getElementById("tabs");
+  const boardEl = document.getElementById("board");
+  const tipEl = document.getElementById("tip");
+  const KEY = "fairl.session.v2";
+  const VIEWS = ["overview", "diagnostic", "learn", "simulation", "results", "analytics", "blueprint"];
+  const LETTERS = "ABCDEF";
+
+  const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  /* Role-adapted content: {base, leader} or {agent, backoffice, leader} resolve to one variant. */
+  const pick = (o, role) => (o && typeof o === "object" && !Array.isArray(o) && ("base" in o || role in o)) ? (role in o ? o[role] : o.base) : o;
+  const comp = (id) => L.competencies.find((c) => c.id === id);
+  const fmt = (sec) => String(Math.floor(sec / 60)).padStart(2, "0") + ":" + String(Math.floor(sec % 60)).padStart(2, "0");
+  const level = (v) => (v >= 80 ? "Proficient" : v >= 50 ? "Practicing" : "Emerging");
+  const levelCls = (v) => (v >= 80 ? "good" : v >= 50 ? "warn" : "crit");
+  const lcFirst = (s) => s.charAt(0).toLowerCase() + s.slice(1);
+  const mean = (a) => (a.length ? Math.round(a.reduce((t, v) => t + v, 0) / a.length) : 0);
+
+  /* ---------------- State ---------------- */
+  function blank() {
+    return {
+      profile: { role: "agent", exp: "some" },
+      elapsed: 0,
+      diag: { i: 0, answers: {}, conf: {}, done: false },
+      path: null,
+      learn: { i: 0, items: {}, done: false },
+      sim: { i: 0, res: {}, drafts: {}, picks: {}, hints: {}, done: false },
+      coach: { answers: {}, shown: 0 },
+      filters: { site: "all", role: "all" }
+    };
+  }
+  function load() {
+    try {
+      const raw = localStorage.getItem(KEY);
+      if (raw) {
+        const o = JSON.parse(raw);
+        if (o && o.profile && o.diag && o.sim && o.learn) return Object.assign(blank(), o);
+      }
+    } catch (e) { /* storage unavailable: run in memory */ }
+    return blank();
+  }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* ignore */ } }
+  let saveTimer = null;
+  function saveSoon() { clearTimeout(saveTimer); saveTimer = setTimeout(save, 400); }
+  let S = load();
+  let current = "overview";
+  let askReset = false;
+
+  const started = () => Object.keys(S.diag.answers).length > 0;
+  const activePath = (St) => (St.path || []).filter((p) => p.depth !== "queued");
+  const queuedPath = (St) => (St.path || []).filter((p) => p.depth === "queued");
+  const simFor = (role) => (role === "leader" ? L.sims.leader : L.sims.frontline);
+  const roleName = (id) => L.roles.find((r) => r.id === id).name;
+  const expName = (id) => L.experience.find((r) => r.id === id).name;
+
+  /* ---------------- Live AI (optional) ----------------
+     The tutor always works from prepared lesson notes. Where the viewer is signed in to
+     Claude and allows it, the same panel answers live. Scores never depend on it. */
+  const AI = { fn: null };
+  /* True only when the page runs inside a Claude artifact viewer. Elsewhere there is no live mode to mention. */
+  const RUNTIME = !!(window.claude && typeof window.claude.use === "function");
+  const HIDE = ["not_granted", "sampling_disabled", "not_declared", "capability_disabled", "capability_removed"];
+  const aiLabel = () => (AI.fn ? "Live AI" : "Guided");
+  function aiSync() {
+    document.body.setAttribute("data-ai", AI.fn ? "live" : "guided");
+    document.querySelectorAll("[data-ai-label]").forEach((el) => { el.textContent = aiLabel(); });
+  }
+  function aiOff() { AI.fn = null; aiSync(); }
+  try {
+    if (window.claude && typeof window.claude.use === "function") {
+      window.claude.use("sample").then((fn) => { if (typeof fn === "function") { AI.fn = fn; aiSync(); } }).catch(() => {});
+    }
+  } catch (e) { /* no runtime: guided mode */ }
+
+  function aiComment(targetId, prompt) {
+    const el = document.getElementById(targetId);
+    if (!el || !AI.fn) return;
+    el.hidden = false;
+    el.textContent = "Thinking…";
+    AI.fn(prompt, { modelTier: "quick", onText: (u) => { el.textContent = u.text; } })
+      .then((r) => { el.textContent = r.text; })
+      .catch((e) => {
+        const code = e && e.code;
+        if (HIDE.indexOf(code) >= 0) { aiOff(); el.hidden = true; }
+        else if (code === "rate_limited") el.textContent = "The live tutor is busy. Try again in a minute.";
+        else el.textContent = (e && e.text) || "The live answer was interrupted. Try again.";
+      });
+  }
+
+  /* ---------------- Scoring ---------------- */
+  function diagScore(St, q) {
+    const a = St.diag.answers[q.id];
+    return a == null ? null : pick(q.options, St.profile.role)[a].s;
+  }
+  function preScores(St) {
+    const out = {};
+    L.diagnostic.forEach((q) => { const s = diagScore(St, q); out[q.comp] = s == null ? null : Math.round(s * 100); });
+    return out;
+  }
+  /* The adaptive rule set. Transparent on purpose: every placement has a stated reason. */
+  function buildPath(St) {
+    const role = St.profile.role;
+    const w = L.roleWeights[role] || {};
+    const items = L.diagnostic.map((q) => {
+      const s = diagScore(St, q);
+      const cf = St.diag.conf[q.id];
+      let pri = 1 - s;
+      let reason;
+      if (s < 1 && cf === 2) { pri += 0.4; reason = "You were certain, and the answer missed. That gap is the one most likely to show up on live work, so it comes early."; }
+      else if (s === 0) reason = "Missed in the diagnostic.";
+      else if (s < 1) reason = "Partly right in the diagnostic.";
+      else if (cf === 0) { pri += 0.3; reason = "Right, but you said you were guessing. A full lesson locks it in."; }
+      else reason = "Solid in the diagnostic, so you get the harder version.";
+      if (w[q.comp]) { pri += w[q.comp]; if (s < 1) reason += " Weighted up for your role."; }
+      if (St.profile.exp === "new" && q.comp === "prompt") pri += 0.2;
+      const depth = s === 1 && cf !== 0 ? "stretch" : "core";
+      return { id: q.comp, pri: pri, reason: reason, depth: depth, minutes: depth === "core" ? 3 : 2 };
+    }).sort((a, b) => b.pri - a.pri);
+    let left = 9;
+    items.forEach((it, k) => {
+      if (it.minutes <= left || k < 2) left -= it.minutes;
+      else { it.depth = "queued"; it.minutes = 0; it.reason += " Queued so this sprint stays inside 15 minutes."; }
+    });
+    return items;
+  }
+  function scoreExplain(text, ex) {
+    const t = String(text || "").toLowerCase();
+    const hits = ex.ideas.map((i) => new RegExp(i.re, "i").test(t));
+    const words = t.trim().split(/\s+/).filter(Boolean).length;
+    let score = hits.filter(Boolean).length / ex.ideas.length;
+    if (words < 6) score = Math.min(score, 0.34);
+    return { score: score, hits: hits, words: words };
+  }
+  function scorePrompt(text, st) {
+    const raw = String(text || "");
+    const t = raw.toLowerCase().replace(/\s+/g, " ");
+    const crit = {};
+    let n = 0;
+    st.criteria.forEach((c) => { crit[c.id] = new RegExp(c.re, "i").test(t); if (crit[c.id]) n++; });
+    const pii = /(?:\d[ -]?){13,19}/.test(raw) || /(cvv|cvc|security code|code)\D{0,6}\d{3,4}\b/i.test(raw) || /\b\d{3}-\d{2}-\d{4}\b/.test(raw);
+    const named = new RegExp("\\b" + (st.nameCheck || "dana") + "\\b", "i").test(raw);
+    return { type: "prompt", text: raw, crit: crit, pii: pii, named: named, s: n / st.criteria.length, final: true };
+  }
+  function scoreFlag(picked, st) {
+    const bad = st.segments.map((g, k) => (g.bad ? k : -1)).filter((k) => k >= 0);
+    const hits = picked.filter((k) => bad.indexOf(k) >= 0).length;
+    const fp = picked.length - hits;
+    return { type: "flag", picked: picked.slice(), hits: hits, fp: fp, s: Math.max(0, Math.min(1, (hits - 0.5 * fp) / bad.length)), final: true };
+  }
+  function stageDetail(st, r) {
+    if (st.type === "choice") return st.options[r.choice].fb;
+    if (st.type === "prompt") {
+      const miss = st.criteria.filter((c) => !r.crit[c.id]).map((c) => c.label.toLowerCase());
+      const n = st.criteria.length - miss.length;
+      return n + " of " + st.criteria.length + " parts present" + (miss.length ? " (missing " + miss.join(", ") + ")." : ".") + (r.pii ? " The request included card or ID details." : "");
+    }
+    const nb = st.segments.filter((g) => g.bad).length;
+    return "Caught " + r.hits + " of " + nb + " errors in the AI draft" + (r.fp ? ", and flagged " + r.fp + " sentence" + (r.fp > 1 ? "s" : "") + " that " + (r.fp > 1 ? "were" : "was") + " fine" : "") + ".";
+  }
+  /* Evidence model: every score is a weighted list of things the learner did. */
+  function evidence(St) {
+    const role = St.profile.role;
+    const ev = {};
+    L.competencies.forEach((c) => { ev[c.id] = []; });
+    activePath(St).forEach((p) => {
+      const it = St.learn.items[p.id];
+      if (!it) return;
+      const les = L.lessons[p.id];
+      const chk = pick(p.depth === "stretch" ? les.stretch : les.check, role);
+      if (it.check != null) {
+        const o = chk.options[it.check];
+        ev[p.id].push({ w: 1, s: o.ok ? 1 : 0, src: "lesson", label: p.depth === "stretch" ? "Stretch check" : "Lesson check", detail: o.ok ? "Answered correctly." : "You chose \u201c" + o.t.replace(/\.$/, "") + "\u201d. " + o.fb });
+      }
+      if (it.explainRes) {
+        const k = it.explainRes.hits.filter(Boolean).length;
+        ev[p.id].push({ w: 1, s: it.explainRes.score, src: "lesson", label: "Explain-back", detail: k + " of " + it.explainRes.hits.length + " key ideas present in your own words." });
+      }
+    });
+    simFor(role).stages.forEach((st) => {
+      const r = St.sim.res[st.id];
+      if (!r || !r.final) return;
+      Object.keys(st.comp).forEach((cid) => { ev[cid].push({ w: 2, s: r.s, src: "sim", label: "Simulation: " + st.label, detail: stageDetail(st, r) }); });
+      if (st.type === "prompt") {
+        if (r.pii) ev.protect.push({ w: 2, s: 0, src: "sim", label: "Simulation: " + st.label, detail: "The request you wrote included card or ID details." });
+        else ev.protect.push({ w: 1, s: r.named ? 0.5 : 1, src: "sim", label: "Simulation: " + st.label, detail: r.named ? "No card details, but you named the person where a description would do." : "Kept identifying details out of the request you wrote." });
+      }
+    });
+    L.diagnostic.forEach((q) => {
+      if (!ev[q.comp].some((e) => e.src === "lesson")) {
+        const s = diagScore(St, q);
+        if (s != null) ev[q.comp].push({ w: 1, s: s, src: "diag", label: "Diagnostic", detail: "Carried forward. No lesson on this in the sprint." });
+      }
+    });
+    return ev;
+  }
+  function postScores(ev) {
+    const out = {};
+    Object.keys(ev).forEach((k) => {
+      const w = ev[k].reduce((t, e) => t + e.w, 0);
+      out[k] = w ? Math.round(100 * ev[k].reduce((t, e) => t + e.w * e.s, 0) / w) : null;
+    });
+    return out;
+  }
+
+  /* A filled-in example so Results is never an empty shell. Clearly labelled where shown. */
+  let SAMPLE = null;
+  function sampleState() {
+    if (SAMPLE) return SAMPLE;
+    const St = blank();
+    St.elapsed = 13 * 60 + 20;
+    St.diag = { i: 4, done: true, answers: { "d-prompt": 2, "d-verify": 1, "d-protect": 2, "d-judge": 1, "d-improve": 0 }, conf: { "d-prompt": 1, "d-verify": 2, "d-protect": 2, "d-judge": 1, "d-improve": 0 } };
+    St.path = buildPath(St);
+    const okIdx = (id) => pick(L.lessons[id].check, "agent").options.findIndex((o) => o.ok);
+    St.learn = { i: 2, done: true, items: {
+      verify: { check: okIdx("verify"), explain: "", explainRes: { score: 1, hits: [true, true, true] }, skipped: false },
+      judge: { check: okIdx("judge"), explain: "", explainRes: { score: 0.67, hits: [true, false, true] }, skipped: false },
+      prompt: { check: okIdx("prompt"), explain: "", explainRes: null, skipped: true }
+    } };
+    St.sim = { i: 4, done: true, drafts: {}, picks: {}, hints: {}, res: {
+      s1: { type: "choice", choice: 1, s: 1, final: true },
+      s2: { type: "prompt", text: "", crit: { context: true, task: true, limits: false, format: true }, pii: false, named: false, s: 0.75, final: true },
+      s3: { type: "flag", picked: [1, 5], hits: 2, fp: 0, s: 2 / 3, final: true },
+      s4: { type: "choice", choice: 3, s: 0.5, final: true },
+      s5: { type: "choice", choice: 1, s: 1, final: true }
+    } };
+    SAMPLE = St;
+    return St;
+  }
+
+  /* ---------------- Shell ---------------- */
+  function stepDone(v) {
+    if (v === "diagnostic") return S.diag.done;
+    if (v === "learn") return S.learn.done;
+    if (v === "simulation" || v === "results") return S.sim.done;
+    return false;
+  }
+  function renderTabs() {
+    const items = [["overview", "Overview"], ["diagnostic", "Diagnostic", 1], ["learn", "Learn", 2], ["simulation", "Simulation", 3], ["results", "Results and coaching", 4], null, ["analytics", "Adoption analytics"], ["blueprint", "Deployment blueprint"]];
+    tabsEl.innerHTML = items.map((it) => {
+      if (!it) return '<span class="gap" aria-hidden="true"></span>';
+      const done = stepDone(it[0]);
+      const n = it[2] ? '<span class="n">' + (done && current !== it[0] ? "✓" : it[2]) + "</span>" : "";
+      return '<a href="#' + it[0] + '" data-go="' + it[0] + '" class="' + (done ? "done" : "") + '"' + (current === it[0] ? ' aria-current="page"' : "") + ">" + n + it[1] + "</a>";
+    }).join("");
+    const cur = tabsEl.querySelector('[aria-current="page"]');
+    const sc = tabsEl.parentElement;
+    if (cur && sc && sc.scrollWidth > sc.clientWidth) sc.scrollLeft = Math.max(0, cur.offsetLeft - sc.offsetLeft - (sc.clientWidth - cur.offsetWidth) / 2);
+  }
+  function renderBoard() {
+    const done = (S.diag.done ? 1 : 0) + (S.learn.done ? 1 : 0) + (S.sim.done ? 1 : 0);
+    boardEl.innerHTML = '<div><span>Time</span><b id="clock">' + fmt(S.elapsed) + " / 15:00</b></div><div><span>Path</span><b>" + done + " of 3 done</b></div><div><span>Tutor</span><b data-ai-label>" + aiLabel() + "</b></div>";
+  }
+  function renderReset() {
+    const slot = document.getElementById("reset-slot");
+    if (!slot) return;
+    slot.innerHTML = askReset
+      ? '<span class="row"><span>Clear your answers and start again?</span><button class="btn sm" data-act="resetYes">Clear</button><button class="btn sm quiet" data-act="resetNo">Keep</button></span>'
+      : (started() ? '<button class="btn sm quiet" data-act="resetAsk">Start over</button>' : "");
+  }
+  function render() {
+    hideTip();
+    renderTabs();
+    renderBoard();
+    renderReset();
+    view.innerHTML = VIEW[current]();
+    aiSync();
+    if (current === "analytics") drawActive();
+    const log = document.getElementById("tutor-log");
+    if (log) log.scrollTop = log.scrollHeight;
+  }
+  function go(v) {
+    if (VIEWS.indexOf(v) < 0) v = "overview";
+    current = v;
+    try { if (location.hash !== "#" + v) location.hash = v; } catch (e) { /* hash not available */ }
+    render();
+    window.scrollTo(0, 0);
+  }
+  function locked(msg, v, label) {
+    return '<div class="panel stack" style="max-width:660px"><h2>One step first</h2><p class="muted">' + msg + '</p><div class="row"><a class="btn primary" href="#' + v + '" data-go="' + v + '">' + label + '</a><a class="btn" href="#results" data-go="results">See a sample learner’s results</a></div></div>';
+  }
+  function progress(i, n) {
+    let h = '<div class="prog" aria-hidden="true">';
+    for (let k = 0; k < n; k++) h += '<i class="' + (k <= i ? "on" : "") + '"></i>';
+    return h + "</div>";
+  }
+
+  /* ---------------- Overview ---------------- */
+  function profilePicker() {
+    const lockedProfile = started();
+    const cards = (list, key, act) => list.map((r) => '<button class="choice" data-act="' + act + '" data-arg="' + r.id + '" aria-pressed="' + (S.profile[key] === r.id) + '"' + (lockedProfile ? " disabled" : "") + "><b>" + esc(r.name) + "</b><span>" + esc(r.desc) + "</span></button>").join("");
+    const next = !S.diag.done ? "diagnostic" : !S.learn.done ? "learn" : !S.sim.done ? "simulation" : "results";
+    return '<section class="panel stack" aria-label="Set up your session">' +
+      '<div class="stack-s"><h3>Who is learning today?</h3><p class="small muted">Your role changes the scenarios, the simulation and the coaching.</p></div>' +
+      '<div class="cards rows" role="group" aria-label="Role">' + cards(L.roles, "role", "setRole") + "</div>" +
+      '<div class="stack-s"><h3>How much have you used generative AI?</h3></div>' +
+      '<div class="cards rows" role="group" aria-label="Experience">' + cards(L.experience, "exp", "setExp") + "</div>" +
+      (lockedProfile
+        ? '<div class="row"><a class="btn primary" href="#' + next + '" data-go="' + next + '">Continue where you left off</a><span class="small muted">Use Start over at the foot of the page to change role.</span></div>'
+        : '<div class="row"><a class="btn primary" href="#diagnostic" data-go="diagnostic">Start the 2-minute diagnostic</a><span class="small muted">No sign-in. Nothing you type leaves this page' + (RUNTIME ? " unless you turn on the live tutor" : "") + '.</span></div>') +
+      "</section>";
+  }
+  function vOverview() {
+    const steps = [
+      ["Diagnostic", "Five short scenarios. Your answers and your confidence decide what comes next.", "2 min"],
+      ["Adaptive lessons", "Only the lessons you need, at the depth you need, with an AI tutor beside each one.", "8 min"],
+      ["Simulation", "A realistic case: brief the AI, check its draft, make the judgment call.", "4 min"],
+      ["Results and coaching", "A scorecard with the evidence behind it, and a plan for your next shift.", "1 min"]
+    ];
+    const caps = [
+      ["Adaptive 15-minute learning", "Five answers and your confidence decide which lessons you get, how deep they go, and what waits for the next sprint.", "diagnostic", "Start the diagnostic"],
+      ["Personalized AI tutoring", RUNTIME ? "A tutor beside every lesson. It answers from prepared lesson notes, and live through Claude when a signed-in viewer allows it." : "A tutor beside every lesson. It answers from prepared notes matched to the lesson and to your role and experience.", "learn", "Open the lessons"],
+      ["Realistic business simulation", "A live contact or a coaching day, with a prompt to write, an AI draft to check and a judgment call to make.", "simulation", "Open the simulation"],
+      ["Competency assessment", "Five competencies scored before and after. Every score links to what the learner did to earn it.", "results", "See a scorecard"],
+      ["Coaching", "A guided reflection, a commitment card, and a toolkit a team leader can use the same day.", "results", "See the coaching plan"],
+      ["Adoption analytics", "A readiness dashboard for a 2,400-person rollout that pairs usage with quality and business results.", "analytics", "Open the dashboard"]
+    ];
+    return '<div class="stack-l">' +
+      '<div class="hero">' +
+        '<div class="stack">' +
+          '<span class="eyebrow">Work sample · Manager, Learning &amp; Enablement Consultant for AI · R1004111</span>' +
+          "<h1>Get a frontline team ready for AI in fifteen minutes at a time</h1>" +
+          '<p class="lede">This is a working learning product. Take the path as an agent or a team leader, then see how the same data tells an operations executive whether the rollout is working.</p>' +
+          '<ol class="steps">' + steps.map((s, k) => '<li><span class="n">0' + (k + 1) + '</span><span><span class="t">' + s[0] + '</span><br><span class="d">' + s[1] + '</span></span><span class="m">' + s[2] + "</span></li>").join("") + "</ol>" +
+          '<p class="small muted">Short on time? <a href="#results" data-go="results">See a finished scorecard</a>, <a href="#analytics" data-go="analytics">the adoption dashboard</a> or <a href="#blueprint" data-go="blueprint">how this deploys</a>.</p>' +
+        "</div>" +
+        profilePicker() +
+      "</div>" +
+      '<hr class="rule">' +
+      '<div class="stack"><h2>What you can evaluate here</h2>' +
+        '<div class="grid-3">' + caps.map((c) => '<div class="panel cap stack-s"><h3>' + c[0] + "</h3><p>" + c[1] + '</p><a href="#' + c[2] + '" data-go="' + c[2] + '">' + c[3] + " →</a></div>").join("") + "</div>" +
+      "</div>" +
+      '<div class="band small muted">The setting is Northfield Card Services, a fictional card issuer rolling out a fictional agent-assist tool called Relay Assist to 2,400 associates. All customers, colleagues, policies and metrics are invented.</div>' +
+    "</div>";
+  }
+
+  /* ---------------- Diagnostic ---------------- */
+  function vDiagnostic() {
+    if (S.diag.done) return pathScreen();
+    const role = S.profile.role;
+    const n = L.diagnostic.length;
+    const q = L.diagnostic[S.diag.i];
+    const opts = pick(q.options, role);
+    const a = S.diag.answers[q.id];
+    const cf = S.diag.conf[q.id];
+    const last = S.diag.i === n - 1;
+    return '<div class="stack-l" style="max-width:780px">' +
+      '<div class="stack-s"><span class="eyebrow">Diagnostic · question ' + (S.diag.i + 1) + " of " + n + " · " + esc(roleName(role)) + "</span>" + progress(S.diag.i, n) + "</div>" +
+      "<h2>" + esc(pick(q.stem, role)) + "</h2>" +
+      '<div class="opts" role="group" aria-label="Answers">' + opts.map((o, k) => '<button class="opt" data-act="diagPick" data-arg="' + k + '" aria-pressed="' + (a === k) + '"><span class="key">' + LETTERS[k] + "</span><span>" + esc(o.t) + "</span></button>").join("") + "</div>" +
+      '<div class="stack-s"><span class="small muted">How sure are you?</span><div><div class="seg" role="group" aria-label="Confidence">' + ["Guessing", "Fairly sure", "Certain"].map((t, k) => '<button data-act="diagConf" data-arg="' + k + '" aria-pressed="' + (cf === k) + '">' + t + "</button>").join("") + "</div></div></div>" +
+      '<div class="row between"><span class="small muted">No feedback yet. That comes in the lessons.</span><button class="btn primary" data-act="diagNext"' + (a == null || cf == null ? " disabled" : "") + ">" + (last ? "Build my path" : "Next question") + "</button></div>" +
+    "</div>";
+  }
+  const DEPTH = { core: ["Full lesson", "accent"], stretch: ["Stretch version", "signal"], queued: ["Next sprint", ""] };
+  function pathScreen() {
+    const act = activePath(S);
+    const q = queuedPath(S);
+    const mins = act.reduce((t, p) => t + p.minutes, 0);
+    const row = (p, k) => '<div class="it"><span class="eyebrow">' + (p.depth === "queued" ? "–" : "0" + (k + 1)) + '</span><div class="stack-s"><div class="row"><b>' + esc(L.lessons[p.id].title) + '</b><span class="pill ' + DEPTH[p.depth][1] + '">' + DEPTH[p.depth][0] + '</span></div><span class="small muted">' + esc(comp(p.id).name) + ". " + esc(p.reason) + '</span></div><span class="eyebrow">' + (p.minutes ? p.minutes + " min" : "") + "</span></div>";
+    return '<div class="stack-l" style="max-width:820px">' +
+      '<div class="stack-s"><span class="eyebrow">Diagnostic complete</span><h2>Your path: ' + act.length + " lesson" + (act.length > 1 ? "s" : "") + ", " + mins + " minutes</h2>" +
+      '<p class="muted measure">Built from your five answers, how sure you were, and your role. Lessons you already have are shortened or held back so the sprint fits in 15 minutes.</p></div>' +
+      '<div class="panel pathlist">' + act.map(row).join("") + q.map(row).join("") + "</div>" +
+      '<div class="row"><a class="btn primary" href="#learn" data-go="learn">' + (S.learn.done ? "Review lessons" : S.learn.i > 0 ? "Continue lessons" : "Start lesson 1") + '</a><span class="small muted">Then a ' + (S.profile.role === "leader" ? "coaching" : "live-contact") + " simulation, about 4 minutes.</span></div>" +
+    "</div>";
+  }
+
+  /* ---------------- Learn ---------------- */
+  const T = { key: null, msgs: [], busy: false, ctl: null, awaiting: false };
+  function curLesson() { const p = activePath(S)[S.learn.i]; return p ? L.lessons[p.id] : null; }
+  function tutorInit(p) {
+    if (T.key === p.id) return;
+    const x = { new: "new to generative AI, so I will skip the jargon", some: "an occasional user of generative AI", daily: "a daily user of generative AI, so I will move quickly" }[S.profile.exp];
+    T.key = p.id;
+    T.awaiting = false;
+    T.msgs = [{ who: "tutor", text: "I am your tutor for this lesson. You are a " + roleName(S.profile.role).toLowerCase() + " and " + x + ". I will keep examples close to your work. Pick a question or ask your own." }];
+  }
+  const msgHtml = (m) => '<div class="msg ' + m.who + '"><span class="who">' + (m.who === "you" ? "You" : "Tutor") + "</span><span>" + esc(m.text) + "</span></div>";
+  function tutorPanel(les) {
+    return '<aside class="panel side tutor" aria-label="AI tutor">' +
+      '<div class="row between"><h3>AI tutor</h3><span class="pill accent" data-ai-label>' + aiLabel() + "</span></div>" +
+      '<div class="log" id="tutor-log" aria-live="polite">' + T.msgs.map(msgHtml).join("") + "</div>" +
+      '<div class="chips">' + les.tutor.map((t, k) => '<button class="chip" data-act="askChip" data-arg="' + k + '">' + esc(t.q) + "</button>").join("") + "</div>" +
+      '<div class="askrow"><input type="text" id="tutor-q" placeholder="Ask about this lesson" aria-label="Your question" autocomplete="off"><button class="btn primary sm" id="tutor-send" data-act="ask">Ask</button></div>' +
+      '<p class="small muted" data-guided-only>Guided mode. Answers come from prepared lesson notes.' + (RUNTIME ? " Viewers signed in to Claude get live answers here." : "") + '</p>' +
+      '<p class="small muted" data-ai-only>Live mode. Claude answers from this lesson and your role. Your first question asks for permission.</p>' +
+    "</aside>";
+  }
+  function drawLog() {
+    const log = document.getElementById("tutor-log");
+    if (log) { log.innerHTML = T.msgs.map(msgHtml).join(""); log.scrollTop = log.scrollHeight; }
+    const b = document.getElementById("tutor-send");
+    if (b) { b.textContent = T.busy ? "Stop" : "Ask"; b.setAttribute("data-act", T.busy ? "stopAsk" : "ask"); }
+  }
+  function overlap(text, q) {
+    const words = q.replace(/[^a-z0-9 ]/g, " ").split(/\s+/).filter((w) => w.length > 3);
+    if (!words.length) return 0;
+    return words.filter((w) => text.indexOf(w) >= 0).length / words.length;
+  }
+  function guidedAnswer(text, les) {
+    const t = text.toLowerCase();
+    let best = null;
+    let score = 0;
+    les.tutor.forEach((qa) => { const sc = overlap(t, qa.q.toLowerCase()); if (sc > score) { score = sc; best = qa; } });
+    if (score < 0.6) {
+      let g = null;
+      let gs = 0;
+      L.tutorGeneral.forEach((x) => { const h = x.k.filter((k) => t.indexOf(k) >= 0).length; if (h > gs) { gs = h; g = x; } });
+      if (g) { T.awaiting = false; return g.a; }
+      if (score < 0.34) {
+        if (T.awaiting && t.indexOf("?") < 0) { T.awaiting = false; return "Thanks. Hold on to that example. It is the kind of case the check in this lesson is about."; }
+        return "In guided mode I answer from this lesson’s prepared notes, and I do not have a note that fits that question. Try one of the suggested questions, or ask about prompts, checking drafts, customer data, escalation or coaching.";
+      }
+    }
+    T.awaiting = !!best.ask;
+    return best.a + (best.ask ? "\n\n" + best.ask : "");
+  }
+  function tutorRules(les) {
+    const role = S.profile.role;
+    const x = L.experience.find((e) => e.id === S.profile.exp);
+    return [
+      "You are the tutor inside a 15-minute AI readiness lesson for staff at Northfield Card Services, a fictional card issuer. Their approved AI assistant is called Relay Assist, also fictional.",
+      "Learner: " + roleName(role) + ". Experience with generative AI: " + x.name + " (" + x.desc + ")",
+      "Lesson: " + les.title + ". Framework: " + pick(les.modelName, role) + ". Points: " + pick(les.model, role).map((m) => m[0] + ": " + m[1]).join(" | "),
+      "Rules: plain text only, no markdown, at most 110 words. Use an example from the learner's own kind of work and match their experience level. If they ask for the answer to a quiz question, give a hint and not the answer. End with one short question that makes them apply the idea. If the question is unrelated to using AI at work, steer back to the lesson in one sentence. Never ask for real customer data."
+    ].join("\n");
+  }
+  function tutorAsk(q) {
+    const les = curLesson();
+    if (!les || T.busy) return;
+    T.msgs.push({ who: "you", text: q });
+    if (!AI.fn) { T.msgs.push({ who: "tutor", text: guidedAnswer(q, les) }); drawLog(); return; }
+    const turns = [{ role: "user", content: tutorRules(les) }];
+    T.msgs.slice(1).forEach((m) => turns.push({ role: m.who === "you" ? "user" : "assistant", content: m.text }));
+    const m = { who: "tutor", text: "Thinking…" };
+    T.msgs.push(m);
+    T.busy = true;
+    T.ctl = new AbortController();
+    drawLog();
+    AI.fn(turns, {
+      cache: false, modelTier: "quick", signal: T.ctl.signal,
+      onText: (u) => {
+        m.text = u.text;
+        const log = document.getElementById("tutor-log");
+        if (log && log.lastElementChild) { log.lastElementChild.lastElementChild.textContent = u.text; log.scrollTop = log.scrollHeight; }
+      }
+    }).then((r) => { m.text = r.text; }).catch((e) => {
+      const code = e && e.code;
+      if (code === "cancelled") m.text = (e && e.text) || "Stopped.";
+      else if (HIDE.indexOf(code) >= 0) { aiOff(); m.text = guidedAnswer(q, les); }
+      else if (code === "rate_limited") m.text = "The live tutor is busy right now. From the lesson notes:\n\n" + guidedAnswer(q, les);
+      else m.text = "The live answer was interrupted. From the lesson notes:\n\n" + guidedAnswer(q, les);
+    }).then(() => { T.busy = false; T.ctl = null; drawLog(); });
+  }
+
+  function lessonItem(p) {
+    if (!S.learn.items[p.id]) S.learn.items[p.id] = { check: null, explain: "", explainRes: null, skipped: false };
+    return S.learn.items[p.id];
+  }
+  function modelCard(les, role) {
+    return '<div class="stack-s"><span class="eyebrow">' + esc(pick(les.modelName, role)) + '</span><div class="model">' + pick(les.model, role).map((m) => "<div><b>" + esc(m[0]) + "</b><span>" + esc(m[1]) + "</span></div>").join("") + "</div></div>";
+  }
+  function vLearn() {
+    if (!S.diag.done) return locked("Your lessons are chosen from the diagnostic, so it comes first. It takes about two minutes.", "diagnostic", "Take the diagnostic");
+    const role = S.profile.role;
+    const act = activePath(S);
+    if (S.learn.done) {
+      return '<div class="stack-l"><div class="stack-s"><span class="eyebrow">Lessons complete</span><h2>Your reference cards</h2><p class="muted measure">Keep these open during the simulation if you like. That is how they are meant to be used on the floor.</p></div>' +
+        '<div class="two">' + act.map((p) => '<div class="panel stack-s"><h3>' + esc(L.lessons[p.id].title) + "</h3>" + modelCard(L.lessons[p.id], role) + "</div>").join("") + "</div>" +
+        '<div class="row"><a class="btn primary" href="#simulation" data-go="simulation">' + (S.sim.done ? "Review the simulation" : "Go to the simulation") + "</a></div></div>";
+    }
+    const p = act[S.learn.i];
+    const les = L.lessons[p.id];
+    const it = lessonItem(p);
+    const stretch = p.depth === "stretch";
+    const chk = pick(stretch ? les.stretch : les.check, role);
+    const ex = pick(les.example, role);
+    const explain = pick(les.explain, role);
+    tutorInit(p);
+
+    const rail = '<div class="pathrail" aria-label="Your path">' + act.map((x, k) => '<span class="p ' + (k < S.learn.i ? "done" : k === S.learn.i ? "now" : "") + '">' + (k < S.learn.i ? "✓ " : "") + esc(comp(x.id).short) + "</span>").join("") + queuedPath(S).map((x) => '<span class="p q" title="Queued for your next sprint">' + esc(comp(x.id).short) + " · next sprint</span>").join("") + "</div>";
+
+    const exBody = '<div class="ba"><div><span class="eyebrow">Before</span><span class="quote">' + esc(ex.before) + '</span></div><div class="after"><span class="eyebrow">After</span><span class="quote">' + esc(ex.after) + '</span></div></div><p class="small muted">' + esc(ex.note) + "</p>";
+    const example = S.profile.exp === "daily"
+      ? '<details><summary class="small"><b>Worked example</b> · ' + esc(ex.label) + ' (collapsed for daily users)</summary><div class="stack-s" style="margin-top:10px">' + exBody + "</div></details>"
+      : '<div class="stack-s"><h3>' + (S.profile.exp === "new" ? "Worked example: " : "") + esc(ex.label) + "</h3>" + exBody + "</div>";
+
+    const answered = it.check != null;
+    const right = chk.options.find((o) => o.ok);
+    const chosen = answered ? chk.options[it.check] : null;
+    const check = '<div class="stack"><h3>' + (stretch ? "Stretch check" : "Check your understanding") + "</h3><p>" + esc(chk.stem) + "</p>" +
+      '<div class="opts">' + chk.options.map((o, k) => '<button class="opt ' + (answered ? (o.ok ? "right" : k === it.check ? "wrong" : "dim") : "") + '" data-act="lessonCheck" data-arg="' + k + '"' + (answered ? " disabled" : "") + '><span class="key">' + LETTERS[k] + "</span><span>" + esc(o.t) + "</span></button>").join("") + "</div>" +
+      (answered ? '<div class="fb ' + (chosen.ok ? "good" : "crit") + '"><b>' + (chosen.ok ? "Correct." : "Not this one.") + "</b> " + esc(chosen.fb) + (chosen.ok ? "" : " <b>Stronger answer:</b> " + esc(right.t) + " " + esc(right.fb)) + "</div>" : "") + "</div>";
+
+    let explainHtml = "";
+    if (!stretch) {
+      const res = it.explainRes;
+      explainHtml = '<div class="stack"><div class="stack-s"><h3>Explain it back</h3><p>' + esc(explain.ask) + "</p></div>" +
+        '<textarea id="explain-' + p.id + '" data-bind="learn.items.' + p.id + '.explain" placeholder="Two sentences is plenty." aria-label="Your explanation">' + esc(it.explain) + "</textarea>" +
+        (res ? '<div class="fb ' + (res.score >= 0.99 ? "good" : res.score >= 0.5 ? "warn" : "crit") + ' stack-s"><div><b>' + res.hits.filter(Boolean).length + " of " + res.hits.length + " key ideas.</b>" + (res.words < 6 ? " Try a full sentence so there is something to assess." : "") + '</div><div class="rubric">' + explain.ideas.map((i, k) => '<div><span class="tick ' + (res.hits[k] ? "y" : "n") + '">' + (res.hits[k] ? "✓" : "✕") + "</span><span>" + (res.hits[k] ? "Present" : "Missing") + "</span><span>" + esc(i.label) + "</span></div>").join("") + "</div><div><b>A strong answer:</b> " + esc(explain.model) + "</div></div>" : "") +
+        (it.skipped && !res ? '<p class="small muted">Skipped. It will not count for or against you.</p>' : "") +
+        '<div class="row"><button class="btn" data-act="explainScore">' + (res ? "Check again" : "Check my explanation") + "</button>" + (!res && !it.skipped ? '<button class="btn quiet" data-act="explainSkip">Skip this</button>' : "") + '<button class="btn quiet" data-ai-only data-act="aiExplain">Ask the live tutor for feedback</button></div>' +
+        '<div class="fb" id="ai-explain" hidden></div></div>';
+    }
+    const ready = answered && (stretch || it.explainRes || it.skipped);
+    const last = S.learn.i === act.length - 1;
+
+    return '<div class="stack-l">' +
+      '<div class="stack"><div class="row between"><span class="eyebrow">Lesson ' + (S.learn.i + 1) + " of " + act.length + " · " + p.minutes + " min · " + DEPTH[p.depth][0] + "</span>" + rail + "</div>" +
+      "<h2>" + esc(les.title) + '</h2><p class="small muted">Why this is on your path: ' + esc(p.reason) + "</p></div>" +
+      '<div class="work"><section class="panel stack-l" aria-label="Lesson">' +
+        '<p class="lede">' + esc(pick(les.hook, role)) + "</p>" +
+        modelCard(les, role) +
+        (stretch ? "" : example) +
+        '<hr class="rule">' + check +
+        (stretch ? "" : '<hr class="rule">' + explainHtml) +
+        '<div class="row between"><span class="small muted">' + (ready ? "" : stretch ? "Answer the check to continue." : "Answer the check and the explain-back to continue.") + '</span><button class="btn primary" data-act="lessonNext"' + (ready ? "" : " disabled") + ">" + (last ? "Go to the simulation" : "Next lesson") + "</button></div>" +
+      "</section>" + tutorPanel(les) + "</div></div>";
+  }
+
+  /* ---------------- Simulation ---------------- */
+  function sceneMsg(m) {
+    if (m.who === "note") return '<div class="msg note">' + esc(m.text) + "</div>";
+    if (m.who === "assist") return '<div class="msg assist"><span class="who">Relay Assist suggests</span><span>' + esc(m.text) + "</span></div>";
+    return '<div class="msg cust"><span class="who">' + esc(m.who) + "</span><span>" + esc(m.text) + "</span></div>";
+  }
+  function caseFile(sim, role) {
+    const cf = sim.caseFile;
+    return '<aside class="panel side stack" aria-label="' + esc(cf.heading) + '"><div class="stack-s"><span class="eyebrow">' + esc(cf.heading) + "</span><b>" + esc(pick(cf.customer, role)) + "</b></div>" +
+      '<div class="facts">' + cf.facts.map((f) => "<div><span>" + esc(f[0]) + "</span><b>" + esc(f[1]) + "</b></div>").join("") + "</div>" +
+      cf.articles.map((a) => '<div class="ka"><h4><code>' + esc(a.id) + "</code>" + esc(a.title) + "</h4><ul>" + a.lines.map((l) => "<li>" + esc(l) + "</li>").join("") + "</ul></div>").join("") +
+    "</aside>";
+  }
+  function stageBody(st, r) {
+    if (st.type === "choice") {
+      const best = st.options.find((o) => o.s === 1);
+      const ch = r ? st.options[r.choice] : null;
+      return '<div class="opts">' + st.options.map((o, k) => {
+        let cls = "";
+        if (r) cls = k === r.choice ? (o.s === 1 ? "right" : o.s > 0 ? "part" : "wrong") : (o.s === 1 ? "right" : "dim");
+        return '<button class="opt ' + cls + '" data-act="simChoice" data-arg="' + k + '"' + (r ? " disabled" : "") + '><span class="key">' + LETTERS[k] + "</span><span>" + esc(o.t) + "</span></button>";
+      }).join("") + "</div>" +
+      (r ? '<div class="fb ' + (ch.s === 1 ? "good" : ch.s > 0 ? "warn" : "crit") + '"><b>' + (ch.s === 1 ? "Met the standard." : ch.s > 0 ? "Partly there." : "Missed.") + "</b> " + esc(ch.fb) + (ch.s === 1 ? "" : " <b>Stronger move:</b> " + esc(best.t) + " " + esc(best.fb)) + "</div>" : "");
+    }
+    if (st.type === "prompt") {
+      const draft = S.sim.drafts[st.id] || "";
+      let out = '<textarea id="draft-' + st.id + '" data-bind="sim.drafts.' + st.id + '" placeholder="' + esc(st.placeholder) + '" aria-label="Your request to the assistant">' + esc(draft) + "</textarea>";
+      if (r) {
+        const n = st.criteria.filter((c) => r.crit[c.id]).length;
+        out += '<div class="fb ' + (r.pii ? "crit" : n === st.criteria.length ? "good" : "warn") + ' stack-s"><div><b>' + n + " of " + st.criteria.length + ' parts present.</b></div><div class="rubric">' +
+          st.criteria.map((c) => '<div><span class="tick ' + (r.crit[c.id] ? "y" : "n") + '">' + (r.crit[c.id] ? "✓" : "✕") + "</span><span><b>" + c.label + "</b></span><span>" + (r.crit[c.id] ? "Present." : esc(c.tip)) + "</span></div>").join("") +
+          '<div><span class="tick ' + (r.pii ? "n" : "y") + '">' + (r.pii ? "✕" : "✓") + "</span><span><b>Data</b></span><span>" + (r.pii ? "Remove the card or ID details. The assistant does not need them." : r.named ? "No card details. You could also drop the name: a description works as well." : "No identifying details in the request.") + "</span></div></div></div>" +
+          '<details><summary class="small"><b>See a model request</b></summary><p class="quote" style="margin-top:8px">' + esc(st.model) + "</p></details>";
+      }
+      out += '<div class="row"><button class="btn" data-act="simPrompt">' + (r ? "Score it again" : "Score my request") + '</button><button class="btn quiet" data-ai-only data-act="aiPrompt">Ask the live tutor to critique it</button></div><div class="fb" id="ai-prompt" hidden></div>';
+      return out;
+    }
+    const picks = r ? r.picked : (S.sim.picks[st.id] || []);
+    let h = '<div class="segs">' + st.segments.map((g, k) => {
+      const on = picks.indexOf(k) >= 0;
+      let cls = "";
+      let note = "";
+      if (r) {
+        if (g.bad && on) { cls = "hit"; note = "Caught. " + g.why; }
+        else if (g.bad) { cls = "miss"; note = "Missed. " + g.why; }
+        else if (on) { cls = "false"; note = "This one was fine as written."; }
+      }
+      return '<button class="sg ' + cls + '" data-act="simSeg" data-arg="' + k + '" aria-pressed="' + on + '"' + (r ? " disabled" : "") + '><span class="box" aria-hidden="true">' + (on ? "✕" : "") + "</span><span>" + esc(g.t) + (note ? "<small>" + esc(note) + "</small>" : "") + "</span></button>";
+    }).join("") + "</div>";
+    if (r) h += '<div class="fb ' + (r.s >= 0.99 ? "good" : r.s >= 0.5 ? "warn" : "crit") + '"><b>' + esc(stageDetail(st, r)) + "</b> " + (r.s >= 0.99 ? "Nothing wrong would have reached the customer." : "Anything missed here would have been sent under your name.") + "</div>";
+    else h += '<div class="row"><button class="btn" data-act="simFlag">Check my review</button><span class="small muted">' + picks.length + " selected</span></div>";
+    return h;
+  }
+  function vSimulation() {
+    if (!S.diag.done) return locked("The simulation is scored against your diagnostic, so that comes first. It takes about two minutes.", "diagnostic", "Take the diagnostic");
+    const role = S.profile.role;
+    const sim = simFor(role);
+    if (S.sim.done) return simDebrief(sim, role);
+    const n = sim.stages.length;
+    const st = sim.stages[S.sim.i];
+    const r = S.sim.res[st.id];
+    const last = S.sim.i === n - 1;
+    return '<div class="stack-l"><div class="stack-s"><span class="eyebrow">Simulation · ' + esc(roleName(role)) + "</span><h2>" + esc(pick(sim.title, role)) + '</h2><p class="muted measure">' + esc(pick(sim.intro, role)) + "</p>" +
+      (S.learn.done ? "" : '<p class="small muted">You still have lessons open. They stay available under Learn.</p>') + "</div>" +
+      '<div class="work sim">' + caseFile(sim, role) +
+      '<section class="panel stack" aria-label="Current decision"><div class="stack-s"><span class="eyebrow">Decision ' + (S.sim.i + 1) + " of " + n + " · " + esc(st.label) + "</span>" + progress(S.sim.i, n) + "</div>" +
+        '<div class="scene">' + st.scene.map(sceneMsg).join("") + "</div>" +
+        "<h3>" + esc(st.ask) + "</h3>" + stageBody(st, r) +
+        (S.sim.hints[st.id] ? '<div class="fb"><b>Tutor hint.</b> ' + esc(st.hint) + "</div>" : "") +
+        '<div class="row between">' + (S.sim.hints[st.id] || (r && r.final) ? "<span></span>" : '<button class="btn quiet" data-act="simHint">Ask the tutor for a hint</button>') + '<button class="btn primary" data-act="simNext"' + (r && r.final ? "" : " disabled") + ">" + (last ? "Finish and debrief" : "Continue") + "</button></div>" +
+      "</section></div></div>";
+  }
+  function simDebrief(sim, role) {
+    const rows = sim.stages.map((st) => {
+      const r = S.sim.res[st.id];
+      const tag = r.s >= 0.99 ? ["good", "Met"] : r.s >= 0.5 ? ["warn", "Partly"] : ["crit", "Missed"];
+      return "<tr><td><b>" + esc(st.label) + '</b><br><span class="small muted">' + esc(Object.keys(st.comp).map((c) => comp(c).name).join(", ")) + '</span></td><td><span class="pill ' + tag[0] + '">' + tag[1] + '</span></td><td class="muted">' + esc(stageDetail(st, r)) + "</td></tr>";
+    }).join("");
+    const met = sim.stages.filter((st) => S.sim.res[st.id].s >= 0.99).length;
+    const hints = Object.keys(S.sim.hints).length;
+    return '<div class="stack-l"><div class="stack-s"><span class="eyebrow">Simulation debrief</span><h2>' + met + " of " + sim.stages.length + ' decisions met the standard</h2><p class="muted measure">' + esc(pick(sim.title, role)) + ". " + (hints ? "You used " + hints + " hint" + (hints > 1 ? "s" : "") + ", which is what they are for." : "No hints used.") + "</p></div>" +
+      '<div class="panel scroll-x"><table class="tbl"><thead><tr><th>Decision</th><th>Outcome</th><th>What happened</th></tr></thead><tbody>' + rows + "</tbody></table></div>" +
+      '<div class="row"><a class="btn primary" href="#results" data-go="results">See my results and coaching plan</a><button class="btn" data-act="simRetry">Run the simulation again</button></div></div>';
+  }
+
+  /* ---------------- Results and coaching ---------------- */
+  function dumbbell(rows, withAvg) {
+    return '<div class="db">' + rows.map((r) => {
+      const a = Math.min(r.pre, r.post);
+      const b = Math.max(r.pre, r.post);
+      return '<div class="db-row"><span class="db-name">' + esc(r.name) + '</span><div class="db-track" role="img" aria-label="' + esc(r.name) + ": " + r.pre + " before, " + r.post + ' after"><span class="db-link" style="left:' + a + "%;width:" + (b - a) + '%"></span><span class="db-dot pre" style="left:' + r.pre + '%" title="Diagnostic: ' + r.pre + '"></span>' + (withAvg ? '<span class="db-dot avg" style="left:' + r.avg + '%" title="Cohort average: ' + r.avg + '"></span>' : "") + '<span class="db-dot post" style="left:' + r.post + '%" title="After the sprint: ' + r.post + '"></span></div><span class="db-val">' + r.pre + " → " + r.post + "</span></div>";
+    }).join("") + '<div class="db-axis"><span></span><div><span>0</span><span>50</span><span>100</span></div><span></span></div></div>';
+  }
+  function resultModel(St) {
+    const pre = preScores(St);
+    const ev = evidence(St);
+    const post = postScores(ev);
+    const rows = L.competencies.map((c) => ({ id: c.id, name: c.name, pre: pre[c.id] == null ? 0 : pre[c.id], post: post[c.id] == null ? 0 : post[c.id], ev: ev[c.id] }));
+    const sorted = rows.slice().sort((a, b) => a.post - b.post);
+    return { rows: rows, pre: mean(rows.map((r) => r.pre)), post: mean(rows.map((r) => r.post)), low: sorted[0], best: sorted[sorted.length - 1], top: sorted.slice().reverse().filter((r) => r.post >= 80).slice(0, 2), gain: rows.slice().sort((a, b) => (b.post - b.pre) - (a.post - a.pre))[0] };
+  }
+  function summaryText(St, M) {
+    const lines = ["Frontline AI Readiness Lab: learner summary", "Role: " + roleName(St.profile.role) + " | Experience: " + expName(St.profile.exp), "Time used: " + fmt(St.elapsed) + " of 15:00", "Overall readiness: " + M.pre + " to " + M.post + " (" + level(M.post) + ")"];
+    M.rows.forEach((r) => lines.push("  " + r.name + ": " + r.pre + " to " + r.post));
+    lines.push("Priority next: " + M.low.name);
+    lines.push("Practice: " + pick(L.practice[M.low.id].rep, St.profile.role));
+    if (St === S && S.coach.shown >= 4) lines.push("Commitment: " + (S.coach.answers.options || "") + " | Check-in: " + (S.coach.answers.will || ""));
+    lines.push("Fictional scenario. Scores are rule-based and linked to evidence in the app.");
+    return lines.join("\n");
+  }
+  function vResults() {
+    const mine = S.sim.done;
+    const St = mine ? S : sampleState();
+    const role = St.profile.role;
+    const M = resultModel(St);
+    const pr = L.practice[M.low.id];
+    const over = L.diagnostic.filter((q) => St.diag.conf[q.id] === 2 && diagScore(St, q) < 1).map((q) => comp(q.comp));
+    const under = L.diagnostic.filter((q) => St.diag.conf[q.id] === 0 && diagScore(St, q) === 1).map((q) => comp(q.comp));
+    const post = {};
+    M.rows.forEach((r) => { post[r.id] = r.post; });
+
+    const strengths = M.top.length
+      ? M.top.map((r) => { const e = r.ev.filter((x) => x.s >= 0.99).sort((a, b) => b.w - a.w)[0]; return "<li><b>" + esc(r.name) + ".</b> " + esc(e ? e.detail : "Consistent across the sprint.") + "</li>"; }).join("")
+      : "<li>No competency reached 80 yet. That is normal for a first sprint. The plan below shows where to start.</li>";
+    const worst = M.low.ev.slice().sort((a, b) => a.s - b.s)[0];
+    const calib = (over.length ? "<p>You were certain about <b>" + esc(over.map((c) => lcFirst(c.name)).join(" and ")) + "</b> in the diagnostic and the answer missed. After the sprint: " + over.map((c) => post[c.id]).join(" and ") + ". Confident gaps are the ones that reach customers, which is why the path put them early.</p>" : "") +
+      (under.length ? "<p>You guessed right on <b>" + esc(under.map((c) => lcFirst(c.name)).join(" and ")) + "</b>. The lesson was there to turn a guess into a habit.</p>" : "") +
+      (!over.length && !under.length ? "<p>Your confidence matched your answers. You know what you know, which makes coaching easier.</p>" : "");
+
+    const evidenceHtml = M.rows.map((r) => '<details class="ev"' + (r.id === M.low.id ? " open" : "") + '><summary><b>' + esc(r.name) + '</b><span class="pill ' + levelCls(r.post) + '">' + level(r.post) + '</span><span class="db-val">' + r.post + '</span></summary><div class="evlist">' +
+      r.ev.map((e) => '<div><span class="pill ' + (e.s >= 0.99 ? "good" : e.s >= 0.5 ? "warn" : "crit") + '">' + (e.s >= 0.99 ? "Met" : e.s >= 0.5 ? "Partly" : "Missed") + "</span><span><b>" + esc(e.label) + ".</b> " + esc(e.detail) + "</span></div>").join("") + "</div></details>").join("");
+
+    /* Coaching reflection (only for the reviewer's own session) */
+    let coach;
+    if (!mine) {
+      coach = '<p class="muted">Finish the path and this becomes a four-question reflection that ends in a commitment card you can copy to your team leader.</p><div class="commit stack-s"><span class="eyebrow">Sample commitment card</span><p><b>I will try:</b> Before I send any AI draft with a customer-impacting decision in it, I will check KA-5102 for a trigger.</p><p><b>Check-in:</b> With my team leader at Thursday’s one-to-one.</p></div>';
+    } else {
+      const c = comp(M.low.id);
+      coach = L.coachSteps.map((stp, k) => {
+        if (k > S.coach.shown) return "";
+        const val = S.coach.answers[stp.id] || "";
+        return '<div class="stack-s"><label class="fld" for="coach-' + stp.id + '"><span class="eyebrow">' + stp.label + "</span>" + esc(stp.ask(c)) + '</label><textarea id="coach-' + stp.id + '" data-bind="coach.answers.' + stp.id + '" style="min-height:64px">' + esc(val) + "</textarea>" + (k < S.coach.shown ? '<p class="small muted">' + esc(stp.reflect) + "</p>" : "") + "</div>";
+      }).join("");
+      if (S.coach.shown < 4) coach += '<div class="row"><button class="btn" data-act="coachNext">' + (S.coach.shown === 3 ? "Make my commitment card" : "Next question") + '</button><span class="small muted" id="coach-msg"></span></div>';
+      else coach += '<div class="commit stack-s"><span class="eyebrow">My commitment card</span><p><b>Goal:</b> ' + esc(S.coach.answers.goal) + "</p><p><b>What gets in the way:</b> " + esc(S.coach.answers.reality) + "</p><p><b>I will try:</b> " + esc(S.coach.answers.options) + "</p><p><b>Check-in:</b> " + esc(S.coach.answers.will) + '</p></div><div class="row"><button class="btn quiet" data-ai-only data-act="aiCoach">Ask the live coach to respond</button></div><div class="fb" id="ai-coach" hidden></div>';
+    }
+    const leader = role === "leader";
+    const queued = queuedPath(St);
+
+    return '<div class="stack-l">' +
+      (mine ? "" : '<div class="notice"><span><b>Sample learner shown.</b> A contact center agent who uses AI now and then. Your own results replace this when you finish the simulation.</span><a class="btn sm" href="#' + (S.diag.done ? "simulation" : "diagnostic") + '" data-go="' + (S.diag.done ? "simulation" : "diagnostic") + '">' + (S.diag.done ? "Continue my path" : "Take the path") + "</a></div>") +
+      '<div class="stack-s"><span class="eyebrow">Results · ' + esc(roleName(role)) + " · " + esc(expName(St.profile.exp)) + "</span><h2>" + (M.post >= 80 ? "Ready to use AI on live work, with one area to keep practicing" : M.post >= 50 ? "Practicing: the habits are forming, and one needs attention first" : "Emerging: a clear place to start") + "</h2></div>" +
+      '<div class="panel score-hero">' +
+        '<div class="stat"><div class="v num">' + M.pre + " <small>→</small> " + M.post + '</div><div class="l">Overall readiness, before and after</div></div>' +
+        '<div class="stat"><div class="v">' + level(M.post) + '</div><div class="l">Level. Proficient is 80 or above.</div></div>' +
+        '<div class="stat"><div class="v num">' + fmt(St.elapsed) + '</div><div class="l">Time used, of a 15:00 budget</div></div>' +
+        (M.gain.post - M.gain.pre > 0
+          ? '<div class="stat"><div class="v num">+' + (M.gain.post - M.gain.pre) + '</div><div class="l">Biggest gain: ' + esc(lcFirst(M.gain.name)) + "</div></div>"
+          : '<div class="stat"><div class="v num">' + M.best.post + '</div><div class="l">Strongest area: ' + esc(lcFirst(M.best.name)) + "</div></div>") +
+      "</div>" +
+      '<div class="two">' +
+        '<section class="panel stack"><div class="row between"><h3>Competency scorecard</h3><div class="legend"><span><i style="background:var(--ink-3)"></i>Diagnostic</span><span><i style="background:var(--s1)"></i>After the sprint</span></div></div>' + dumbbell(M.rows) + '<p class="small muted">Scores are 0 to 100. “After” rests on more evidence: lesson checks, explain-backs and simulation decisions. The diagnostic is one scenario per competency, so it places you roughly.</p></section>' +
+        '<section class="panel stack-s"><h3>The evidence behind each score</h3>' + evidenceHtml + "</section>" +
+      "</div>" +
+      '<div class="two">' +
+        '<section class="panel stack"><h3>What you did well</h3><ul class="list">' + strengths + "</ul><h3>Where to focus next</h3><p><b>" + esc(M.low.name) + ".</b> " + esc(worst ? worst.detail : "") + '</p><div class="band"><span class="eyebrow">Practice on your next shift</span><p style="margin-top:4px">' + esc(pick(pr.rep, role)) + "</p></div><h3>Confidence check</h3>" + '<div class="stack-s muted">' + calib + "</div></section>" +
+        '<section class="panel stack"><div class="stack-s"><h3>Coaching: plan your next shift</h3><p class="small muted">Four questions, in the order a coach would ask them.</p></div>' + coach + "</section>" +
+      "</div>" +
+      '<div class="two">' +
+        '<section class="panel stack"><h3>' + (leader ? "Toolkit for your team" : "For your team leader") + '</h3><div class="stack-s"><span class="eyebrow">' + (leader ? "Questions to ask your agents" : "Questions they can ask you") + '</span><ul class="list">' + pr.leaderAsk.map((q) => "<li>" + esc(q) + "</li>").join("") + '</ul></div><div class="stack-s"><span class="eyebrow">Five-minute huddle</span><p class="muted">' + esc(pr.huddle) + "</p></div></section>" +
+        '<section class="panel stack"><h3>What happens next</h3><ul class="list">' +
+          (queued.length ? "<li><b>Next sprint:</b> " + esc(queued.map((p) => L.lessons[p.id].title).join(", ")) + ".</li>" : "<li><b>Next sprint:</b> the stretch set for your strongest areas.</li>") +
+          "<li><b>Day 7:</b> a two-question check on \u201c" + esc(lcFirst(M.low.name)) + "\u201d, and your team leader sees your commitment card.</li>" +
+          "<li><b>Day 30:</b> the same competencies are checked on live work through QA sampling. One sitting shows learning. Behavior takes a month.</li></ul>" +
+          '<div class="stack-s"><span class="eyebrow">Summary to share</span><div class="copybox" id="copybox">' + esc(summaryText(St, M)) + '</div><div class="row"><button class="btn sm" data-act="copy">Copy summary</button><a class="btn sm quiet" href="#analytics" data-go="analytics">See how this rolls up for leaders →</a></div></div></section>' +
+      "</div></div>";
+  }
+
+  /* ---------------- Adoption analytics ---------------- */
+  function agg(f) {
+    const rows = L.cohorts.filter((c) => (f.site === "all" || c.site === f.site) && (f.role === "all" || c.role === f.role));
+    const n = rows.reduce((t, c) => t + c.n, 0);
+    const weeks = [];
+    for (let w = 0; w < 12; w++) {
+      const o = { activated: 0, completed: 0, active: 0, proficient: 0 };
+      rows.forEach((c) => { Object.keys(o).forEach((k) => { o[k] += c.weeks[w][k]; }); });
+      weeks.push(o);
+    }
+    const cm = {};
+    L.competencies.forEach((c) => { cm[c.id] = Math.round(rows.reduce((t, r) => t + r.comp[c.id] * r.n, 0) / n); });
+    return { rows: rows, n: n, weeks: weeks, comp: cm, days: Math.round(rows.reduce((t, r) => t + r.daysToProficient * r.n, 0) / n) };
+  }
+  const SERIES_COLOR = { agent: "var(--s1)", backoffice: "var(--s2)", leader: "var(--s3)" };
+  function seriesFor(f) {
+    return L.cohortRoles.filter((r) => f.role === "all" || r.id === f.role).map((r) => {
+      const rows = L.cohorts.filter((c) => c.role === r.id && (f.site === "all" || c.site === f.site));
+      const n = rows.reduce((t, c) => t + c.n, 0);
+      const vals = [];
+      for (let w = 0; w < 12; w++) vals.push(Math.round(100 * rows.reduce((t, c) => t + c.weeks[w].active, 0) / n));
+      return { id: r.id, name: r.name, color: SERIES_COLOR[r.id], vals: vals };
+    });
+  }
+  function hideTip() { tipEl.hidden = true; }
+  function showTip(html, cx, cy) {
+    tipEl.innerHTML = html;
+    tipEl.hidden = false;
+    const w = tipEl.offsetWidth;
+    const h = tipEl.offsetHeight;
+    let x = cx + 14;
+    if (x + w > window.innerWidth - 8) x = Math.max(8, cx - w - 14);
+    let y = cy + 14;
+    if (y + h > window.innerHeight - 8) y = Math.max(8, cy - h - 14);
+    tipEl.style.left = x + "px";
+    tipEl.style.top = y + "px";
+  }
+  function drawActive() {
+    const box = document.getElementById("chart-active");
+    if (!box) return;
+    const W = Math.max(280, Math.floor(box.clientWidth));
+    const H = 270;
+    const m = { l: 40, r: 46, t: 16, b: 42 };
+    const ser = seriesFor(S.filters);
+    const sx = (W - m.l - m.r) / 11;
+    const x = (w) => m.l + (w - 1) * sx;
+    const y = (v) => m.t + (100 - v) * (H - m.t - m.b) / 100;
+    let g = "";
+    [0, 25, 50, 75, 100].forEach((v) => {
+      g += '<line x1="' + m.l + '" x2="' + (W - m.r) + '" y1="' + y(v) + '" y2="' + y(v) + '" stroke="' + (v === 0 ? "var(--axis)" : "var(--grid)") + '" stroke-width="1"/><text x="' + (m.l - 8) + '" y="' + (y(v) + 4) + '" text-anchor="end" font-size="11" fill="var(--ink-3)">' + v + "%</text>";
+    });
+    const step = W < 420 ? 3 : W < 620 ? 2 : 1;
+    for (let w = 1; w <= 12; w++) if ((w - 1) % step === 0) g += '<text x="' + x(w) + '" y="' + (H - m.b + 16) + '" text-anchor="middle" font-size="11" fill="var(--ink-3)">' + w + "</text>";
+    g += '<text x="' + m.l + '" y="' + (H - 6) + '" font-size="11" fill="var(--ink-3)">Rollout week</text>';
+    g += '<line x1="' + m.l + '" x2="' + (W - m.r) + '" y1="' + y(70) + '" y2="' + y(70) + '" stroke="var(--ink-3)" stroke-width="1" stroke-dasharray="4 4"/><text x="' + (m.l + 6) + '" y="' + (y(70) - 6) + '" font-size="11" fill="var(--ink-2)">Target 70%</text>';
+    ser.forEach((s) => {
+      g += '<path d="' + s.vals.map((v, k) => (k ? "L" : "M") + x(k + 1).toFixed(1) + " " + y(v).toFixed(1)).join(" ") + '" fill="none" stroke="' + s.color + '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+    });
+    const ends = ser.map((s) => ({ s: s, y: y(s.vals[11]), ly: y(s.vals[11]) })).sort((a, b) => a.y - b.y);
+    for (let i = 1; i < ends.length; i++) if (ends[i].ly - ends[i - 1].ly < 14) ends[i].ly = ends[i - 1].ly + 14;
+    ends.forEach((e) => {
+      g += '<circle cx="' + x(12) + '" cy="' + e.y + '" r="4.5" fill="' + e.s.color + '" stroke="var(--surface)" stroke-width="2"/><text x="' + (x(12) + 10) + '" y="' + (e.ly + 4) + '" font-size="12" font-weight="600" fill="var(--ink)">' + e.s.vals[11] + "%</text>";
+    });
+    box.innerHTML = '<svg viewBox="0 0 ' + W + " " + H + '" width="' + W + '" height="' + H + '" role="img" tabindex="0" aria-label="Weekly use of Relay Assist on live work by role, weeks 1 to 12. Use the arrow keys to read each week.">' + g + '<g id="hov"></g></svg>';
+    const svg = box.querySelector("svg");
+    const hov = svg.querySelector("#hov");
+    let cur = 12;
+    const show = (w, cx, cy) => {
+      cur = w;
+      hov.innerHTML = '<line x1="' + x(w) + '" x2="' + x(w) + '" y1="' + m.t + '" y2="' + (H - m.b) + '" stroke="var(--axis)" stroke-width="1"/>' + ser.map((s) => '<circle cx="' + x(w) + '" cy="' + y(s.vals[w - 1]) + '" r="4.5" fill="' + s.color + '" stroke="var(--surface)" stroke-width="2"/>').join("");
+      showTip("<h5>Week " + w + "</h5>" + ser.map((s) => '<div><i style="background:' + s.color + '"></i><span>' + esc(s.name) + "</span><b>" + s.vals[w - 1] + "%</b></div>").join(""), cx, cy);
+    };
+    const clear = () => { hov.innerHTML = ""; hideTip(); };
+    svg.addEventListener("pointermove", (e) => {
+      const r = svg.getBoundingClientRect();
+      const px = (e.clientX - r.left) * (W / r.width);
+      show(Math.max(1, Math.min(12, Math.round((px - m.l) / sx) + 1)), e.clientX, e.clientY);
+    });
+    svg.addEventListener("pointerleave", clear);
+    svg.addEventListener("blur", clear);
+    svg.addEventListener("keydown", (e) => {
+      if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+      e.preventDefault();
+      const w = Math.max(1, Math.min(12, cur + (e.key === "ArrowRight" ? 1 : -1)));
+      const r = svg.getBoundingClientRect();
+      show(w, r.left + x(w) * (r.width / W), r.top + m.t + 10);
+    });
+  }
+  function vAnalytics() {
+    const f = S.filters;
+    const A = agg(f);
+    const pct = (v) => Math.round(100 * v / A.n);
+    const w12 = A.weeks[11];
+    const w8 = A.weeks[7];
+    const kpi = (label, now, then, note) => '<div class="kpi"><div class="l">' + label + '</div><div class="v num">' + now + '%</div><div class="d"><b class="up-good">▲ ' + (now - then) + " pts</b> in 4 weeks" + (note ? " · " + note : "") + "</div></div>";
+    const funnel = [["Invited", A.n], ["Activated the assistant", w12.activated], ["Completed a first sprint", w12.completed], ["Using it weekly on live work", w12.active], ["Proficient, 80 or above", w12.proficient]];
+    const ser = seriesFor(f);
+    const siteRows = L.sites.filter((s) => f.site === "all" || s.id === f.site).map((s) => {
+      const rows = L.cohorts.filter((c) => c.site === s.id && (f.role === "all" || c.role === f.role));
+      const n = rows.reduce((t, c) => t + c.n, 0);
+      const vals = L.competencies.map((c) => Math.round(rows.reduce((t, r) => t + r.comp[c.id] * r.n, 0) / n));
+      return { name: s.name, vals: vals, avg: mean(vals) };
+    });
+    const bin = (v) => (v < 68 ? 1 : v < 74 ? 2 : v < 80 ? 3 : v < 86 ? 4 : 5);
+    const lowSite = siteRows.slice().sort((a, b) => a.avg - b.avg)[0];
+    const lowComp = L.competencies.slice().sort((a, b) => A.comp[a.id] - A.comp[b.id])[0];
+    const teamRows = L.teams.filter((t) => f.site === "all" || t.site === f.site);
+    const St = S.sim.done ? S : sampleState();
+    const M = resultModel(St);
+    const you = M.rows.map((r) => ({ name: r.name, pre: r.pre, post: r.post, avg: A.comp[r.id] }));
+    const opt = (list, key) => '<option value="all">All</option>' + list.map((o) => '<option value="' + o.id + '"' + (f[key] === o.id ? " selected" : "") + ">" + esc(o.name) + "</option>").join("");
+
+    return '<div class="stack-l">' +
+      '<div class="stack-s"><span class="eyebrow">Adoption analytics · week 12 of rollout · synthetic data</span><h2>Is the rollout working?</h2><p class="muted measure">The view an accountable executive and the readiness team would review each month. Usage is always shown beside quality, because one without the other misleads.</p></div>' +
+      '<div class="filters"><label class="fld" for="f-site">Site<select id="f-site" data-filter="site">' + opt(L.sites, "site") + '</select></label><label class="fld" for="f-role">Role<select id="f-role" data-filter="role">' + opt(L.cohortRoles, "role") + '</select></label><span class="small muted num">' + A.n.toLocaleString("en-US") + " associates in view</span></div>" +
+      '<div class="kpis">' + kpi("Activated", pct(w12.activated), pct(w8.activated)) + kpi("Completed a first sprint", pct(w12.completed), pct(w8.completed)) + kpi("Using it weekly on live work", pct(w12.active), pct(w8.active), "target 70%") + kpi("Proficient, 80 or above", pct(w12.proficient), pct(w8.proficient)) +
+        '<div class="kpi"><div class="l">Median days to proficient</div><div class="v num">' + A.days + '</div><div class="d">From first sprint to 80 or above</div></div></div>' +
+      '<div class="two">' +
+        '<section class="panel stack"><div class="stack-s"><h3>Weekly use on live work, by role</h3><div class="legend">' + ser.map((s) => '<span><i class="line" style="background:' + s.color + '"></i>' + esc(s.name) + "</span>").join("") + '</div></div><div class="chart" id="chart-active"></div>' +
+          '<details><summary class="small">View as table</summary><div class="scroll-x" style="margin-top:8px"><table class="tbl"><thead><tr><th>Week</th>' + ser.map((s) => '<th class="r">' + esc(s.name) + "</th>").join("") + "</tr></thead><tbody>" + [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((w) => "<tr><td>" + w + "</td>" + ser.map((s) => '<td class="r">' + s.vals[w - 1] + "%</td>").join("") + "</tr>").join("") + "</tbody></table></div></details></section>" +
+        '<section class="panel stack"><h3>Adoption funnel</h3><div class="funnel">' + funnel.map((s) => '<div class="fn-row"><span class="fn-name">' + s[0] + '</span><div class="fn-bar" title="' + s[0] + ": " + s[1].toLocaleString("en-US") + '"><i style="width:' + (100 * s[1] / A.n).toFixed(1) + '%"></i></div><span class="fn-val">' + s[1].toLocaleString("en-US") + " · " + pct(s[1]) + "%</span></div>").join("") + '</div><p class="small muted">Share of invited associates at week 12. The widest drop is between completing a sprint and using the tool on live work, which is where leader coaching acts.</p></section>' +
+      "</div>" +
+      '<section class="panel stack"><div class="row between"><h3>Competency scores by site</h3><div class="hl"><span>Average post-assessment</span><span class="b1">under 68</span><span class="b2">68–73</span><span class="b3">74–79</span><span class="b4">80–85</span><span class="b5">86+</span></div></div>' +
+        '<div class="scroll-x"><table class="tbl heat"><thead><tr><th>Site</th>' + L.competencies.map((c) => "<th>" + esc(c.short) + "</th>").join("") + "</tr></thead><tbody>" + siteRows.map((s) => "<tr><td>" + esc(s.name) + "</td>" + s.vals.map((v, k) => '<td class="c" title="' + esc(s.name) + ", " + esc(L.competencies[k].name) + ": " + v + '"><span class="b' + bin(v) + '">' + v + "</span></td>").join("") + "</tr>").join("") + "</tbody></table></div>" +
+        '<div class="band"><span class="eyebrow">Reading this</span><p style="margin-top:4px">' + esc(lowSite.name) + " has the lowest average (" + lowSite.avg + "), and “" + esc(lcFirst(lowComp.name)) + "” is the weakest competency across this view (" + A.comp[lowComp.id] + "). Leader coaching starts there, before another content push.</p></div></section>" +
+      '<div class="two">' +
+        '<section class="panel stack"><h3>Business results: AI-ready cohort against comparison</h3><div class="scroll-x"><table class="tbl"><thead><tr><th>Measure</th><th class="r">Comparison</th><th class="r">AI-ready</th><th>Change</th></tr></thead><tbody>' +
+          L.outcomes.map((o) => { const d = o.after - o.before; const good = (o.better === "up") === (d > 0); return "<tr><td>" + esc(o.metric) + '</td><td class="r">' + o.before.toFixed(o.dp) + o.suffix + '</td><td class="r">' + o.after.toFixed(o.dp) + o.suffix + '</td><td><span class="pill ' + (good ? "good" : "crit") + '">' + (d > 0 ? "▲" : "▼") + " " + Math.abs(d).toFixed(o.dp) + o.dUnit +" · " + (good ? "better" : "worse") + "</span></td></tr>"; }).join("") +
+          '</tbody></table></div><p class="small muted">AI-ready means proficient and using the tool weekly. Cohorts are matched on tenure and contact mix, not randomized, so this shows association. A stepped rollout by site would be the way to estimate effect.</p></section>' +
+        '<section class="panel stack"><h3>Your session against the cohort</h3><div class="legend"><span><i style="background:var(--ink-3)"></i>Diagnostic</span><span><i style="background:var(--s1)"></i>After the sprint</span><span><i class="sq" style="background:transparent;border:2px solid var(--signal);transform:rotate(45deg)"></i>Cohort average</span></div>' + dumbbell(you, true) + '<p class="small muted">' + (S.sim.done ? "Your results from this session, as " + esc(roleName(S.profile.role).toLowerCase()) + "." : "Showing the sample learner. Finish the path and your own results appear here.") + "</p></section>" +
+      "</div>" +
+      '<section class="panel stack"><h3>Teams that need support, and the play for each</h3><div class="scroll-x"><table class="tbl"><thead><tr><th>Team</th><th>Leader</th><th class="r">Weekly use</th><th class="r">QA accuracy</th><th>Signal</th><th>Recommended play</th></tr></thead><tbody>' +
+        (teamRows.length ? teamRows.map((t) => "<tr><td><b>" + esc(t.team) + "</b></td><td>" + esc(t.lead) + '</td><td class="r">' + t.use + '%</td><td class="r">' + t.qa + '%</td><td><span class="pill ' + t.status + '">' + (t.status === "crit" ? "● Act now" : t.status === "warn" ? "▲ Watch" : "✓ Exemplar") + '</span><br><span class="small muted">' + esc(t.signal) + '</span></td><td class="muted" style="min-width:240px">' + esc(t.play) + "</td></tr>").join("") : '<tr><td colspan="6" class="muted">No teams flagged at this site.</td></tr>') +
+        "</tbody></table></div></section>" +
+      '<section class="stack"><h3>Experiment log</h3><div class="grid-3">' + L.experiments.map((x) => '<div class="panel stack-s"><h4>' + esc(x.name) + '</h4><p class="muted small">' + esc(x.n) + "</p><p>" + esc(x.result) + '</p><p class="small"><b>Decision:</b> ' + esc(x.decision) + "</p></div>").join("") + "</div></section>" +
+    "</div>";
+  }
+
+  /* ---------------- Deployment blueprint ---------------- */
+  function vBlueprint() {
+    const layers = [
+      ["Where people learn", ["Agent desktop", "Learning platform", "Team huddle"], false],
+      ["Experience", ["Diagnostic", "Adaptive sprints", "Simulations", "Coaching toolkits"], true],
+      ["Engines", ["Path rules, rule-based and auditable", "Approved LLM gateway for tutoring", "Scoring rubrics"], false],
+      ["Content", ["Enterprise AI fluency assets", "Operations knowledge articles", "Role packs"], false],
+      ["Data", ["Learning records (xAPI)", "QA and operations metrics", "Readiness scorecard"], true]
+    ];
+    const A = L.about;
+    return '<div class="stack-l">' +
+      '<div class="stack-s"><span class="eyebrow">Deployment blueprint</span><h2>From this prototype to an enterprise rollout</h2><p class="muted measure">How the pieces you just used map to the role, how they would be built and governed inside a large operation, and what the first 90 days look like.</p></div>' +
+      '<section class="panel stack"><h3>What the role asks for, and where it shows up</h3><div class="scroll-x"><table class="tbl"><thead><tr><th>The role calls for</th><th>In this lab</th><th>At scale</th></tr></thead><tbody>' + L.traceability.map((t) => '<tr><td style="min-width:220px"><b>' + esc(t.need) + '</b></td><td style="min-width:200px">' + esc(t.here) + '</td><td class="muted" style="min-width:200px">' + esc(t.scale) + "</td></tr>").join("") + '</tbody></table></div><p class="small muted">Requirements are paraphrased from the public posting for R1004111.</p></section>' +
+      '<div class="two">' +
+        '<section class="panel stack"><h3>Reference architecture</h3><div class="arch">' + layers.map((l, k) => (k ? '<div class="flowmark" aria-hidden="true">↓</div>' : "") + '<div class="layer' + (l[2] ? " key" : "") + '"><span class="eyebrow">' + l[0] + '</span><div class="boxes">' + l[1].map((b) => "<span>" + b + "</span>").join("") + "</div></div>").join("") + '</div><p class="small muted">The adaptive rules and the scoring are deliberately rule-based. An approved language model adds tutoring and commentary, and can be switched off without breaking the learning path.</p></section>' +
+        '<section class="panel stack"><h3>Governance for the rollout</h3><div class="dl">' + L.governance.map((g) => "<div><b>" + esc(g[0]) + "</b><span>" + esc(g[1]) + "</span></div>").join("") + "</div></section>" +
+      "</div>" +
+      '<section class="panel stack"><h3>How readiness is measured</h3><div class="scroll-x"><table class="tbl"><thead><tr><th>Level</th><th>Question</th><th>Measures</th></tr></thead><tbody>' + L.measures.map((r) => "<tr><td><b>" + esc(r[0]) + "</b></td><td>" + esc(r[1]) + '</td><td class="muted">' + esc(r[2]) + "</td></tr>").join("") + "</tbody></table></div></section>" +
+      '<section class="stack"><h3>First 90 days</h3><div class="plan">' + L.plan.map((p) => '<div class="panel"><span class="eyebrow">' + esc(p.when) + '</span><h4 style="margin-top:4px">' + esc(p.title) + "</h4><ul>" + p.items.map((i) => "<li>" + esc(i) + "</li>").join("") + "</ul></div>").join("") + "</div></section>" +
+      '<section class="panel tint stack"><div class="stack-s"><span class="eyebrow">Who built this</span><h3>' + esc(A.name) + '</h3><p class="muted">' + esc(A.line) + '</p></div><div class="dl">' + A.points.map((p) => "<div><b>" + esc(p[0]) + "</b><span>" + esc(p[1]) + "</span></div>").join("") + '</div><p class="small">LinkedIn: <a href="' + esc(A.linkedin) + '" target="_blank" rel="noopener">' + esc(A.linkedin.replace("https://www.", "")) + "</a></p></section>" +
+    "</div>";
+  }
+
+  const VIEW = { overview: vOverview, diagnostic: vDiagnostic, learn: vLearn, simulation: vSimulation, results: vResults, analytics: vAnalytics, blueprint: vBlueprint };
+
+  /* ---------------- Actions ---------------- */
+  function setPath(obj, path, val) {
+    const parts = path.split(".");
+    let o = obj;
+    for (let i = 0; i < parts.length - 1; i++) { if (!o[parts[i]] || typeof o[parts[i]] !== "object") o[parts[i]] = {}; o = o[parts[i]]; }
+    o[parts[parts.length - 1]] = val;
+  }
+  function curStage() { return simFor(S.profile.role).stages[S.sim.i]; }
+  function rerender() { const y = window.scrollY; save(); render(); window.scrollTo(0, y); }
+
+  const ACT = {
+    setRole: (v) => { if (!started()) { S.profile.role = v; rerender(); } },
+    setExp: (v) => { if (!started()) { S.profile.exp = v; rerender(); } },
+    diagPick: (v) => { S.diag.answers[L.diagnostic[S.diag.i].id] = +v; rerender(); },
+    diagConf: (v) => { S.diag.conf[L.diagnostic[S.diag.i].id] = +v; rerender(); },
+    diagNext: () => {
+      if (S.diag.i < L.diagnostic.length - 1) { S.diag.i++; save(); render(); window.scrollTo(0, 0); return; }
+      S.diag.done = true;
+      S.path = buildPath(S);
+      save(); render(); window.scrollTo(0, 0);
+    },
+    lessonCheck: (v) => { const p = activePath(S)[S.learn.i]; const it = lessonItem(p); if (it.check == null) { it.check = +v; rerender(); } },
+    explainScore: () => {
+      const p = activePath(S)[S.learn.i];
+      const it = lessonItem(p);
+      if (!String(it.explain || "").trim()) { const el = document.getElementById("explain-" + p.id); if (el) el.focus(); return; }
+      it.explainRes = scoreExplain(it.explain, pick(L.lessons[p.id].explain, S.profile.role));
+      it.skipped = false;
+      rerender();
+    },
+    explainSkip: () => { lessonItem(activePath(S)[S.learn.i]).skipped = true; rerender(); },
+    aiExplain: () => {
+      const p = activePath(S)[S.learn.i];
+      const it = lessonItem(p);
+      const ex = pick(L.lessons[p.id].explain, S.profile.role);
+      if (!String(it.explain || "").trim()) return;
+      aiComment("ai-explain", "You are a tutor giving feedback to a " + roleName(S.profile.role).toLowerCase() + " in a short AI readiness lesson at a fictional card issuer. Question they were asked: " + ex.ask + "\nA strong answer covers: " + ex.ideas.map((i) => i.label).join("; ") + ".\nTheir answer: " + it.explain + "\nReply in plain text, at most 70 words: one thing they got right, one thing to add, and one follow-up question. No markdown.");
+    },
+    lessonNext: () => {
+      const act = activePath(S);
+      if (S.learn.i < act.length - 1) { S.learn.i++; save(); render(); window.scrollTo(0, 0); return; }
+      S.learn.done = true;
+      save();
+      go("simulation");
+    },
+    ask: () => { const inp = document.getElementById("tutor-q"); const q = inp ? inp.value.trim() : ""; if (!q) return; inp.value = ""; tutorAsk(q); },
+    askChip: (k) => { const les = curLesson(); if (les) tutorAsk(les.tutor[+k].q); },
+    stopAsk: () => { if (T.ctl) T.ctl.abort(); },
+    simChoice: (v) => { const st = curStage(); if (S.sim.res[st.id]) return; S.sim.res[st.id] = { type: "choice", choice: +v, s: st.options[+v].s, final: true }; rerender(); },
+    simPrompt: () => {
+      const st = curStage();
+      const text = S.sim.drafts[st.id] || "";
+      if (!text.trim()) { const el = document.getElementById("draft-" + st.id); if (el) el.focus(); return; }
+      S.sim.res[st.id] = scorePrompt(text, st);
+      rerender();
+    },
+    aiPrompt: () => {
+      const st = curStage();
+      const text = S.sim.drafts[st.id] || "";
+      if (!text.trim()) return;
+      aiComment("ai-prompt", "You coach contact center staff on writing requests to an AI assistant. A good request has four parts: context, task, limits, format, and contains no customer identifiers. Task they were given: " + st.ask + "\nTheir request: " + text + "\nReply in plain text, at most 80 words: what works, the single most useful improvement, and a rewritten first line. No markdown.");
+    },
+    simSeg: (v) => { const st = curStage(); if (S.sim.res[st.id]) return; const a = S.sim.picks[st.id] || (S.sim.picks[st.id] = []); const k = a.indexOf(+v); if (k >= 0) a.splice(k, 1); else a.push(+v); rerender(); },
+    simFlag: () => { const st = curStage(); S.sim.res[st.id] = scoreFlag(S.sim.picks[st.id] || [], st); rerender(); },
+    simHint: () => { S.sim.hints[curStage().id] = true; rerender(); },
+    simNext: () => {
+      const n = simFor(S.profile.role).stages.length;
+      if (S.sim.i < n - 1) S.sim.i++; else S.sim.done = true;
+      save(); render(); window.scrollTo(0, 0);
+    },
+    simRetry: () => { S.sim = blank().sim; S.coach = blank().coach; save(); render(); window.scrollTo(0, 0); },
+    coachNext: () => {
+      const stp = L.coachSteps[S.coach.shown];
+      if (!String(S.coach.answers[stp.id] || "").trim()) { const el = document.getElementById("coach-" + stp.id); if (el) el.focus(); const msg = document.getElementById("coach-msg"); if (msg) msg.textContent = "Write a line first."; return; }
+      S.coach.shown++;
+      rerender();
+      const nxt = L.coachSteps[S.coach.shown];
+      if (nxt) { const el = document.getElementById("coach-" + nxt.id); if (el) el.focus(); }
+    },
+    aiCoach: () => {
+      const M = resultModel(S);
+      const a = S.coach.answers;
+      aiComment("ai-coach", "You are a workplace coach responding to a " + roleName(S.profile.role).toLowerCase() + " who just finished an AI readiness sprint. Their priority area: " + M.low.name + ". Their plan. Goal: " + a.goal + " | Barrier: " + a.reality + " | Will try: " + a.options + " | Check-in: " + a.will + "\nReply in plain text, at most 80 words. Reflect back what is strong about the plan, ask one question that makes it more specific, and do not give advice they did not ask for. No markdown.");
+    },
+    copy: (v, btn) => {
+      const box = document.getElementById("copybox");
+      const text = box ? box.textContent : "";
+      const fallback = () => { try { const r = document.createRange(); r.selectNodeContents(box); const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r); btn.textContent = "Selected. Press copy."; } catch (e) { /* ignore */ } };
+      try { navigator.clipboard.writeText(text).then(() => { btn.textContent = "Copied"; }, fallback); } catch (e) { fallback(); }
+    },
+    resetAsk: () => { askReset = true; renderReset(); },
+    resetNo: () => { askReset = false; renderReset(); },
+    resetYes: () => { askReset = false; S = blank(); T.key = null; save(); go("overview"); }
+  };
+
+  document.addEventListener("click", (e) => {
+    const g = e.target.closest("[data-go]");
+    if (g) { e.preventDefault(); go(g.getAttribute("data-go")); return; }
+    const a = e.target.closest("[data-act]");
+    if (!a || a.disabled) return;
+    const fn = ACT[a.getAttribute("data-act")];
+    if (fn) fn(a.getAttribute("data-arg"), a, e);
+  });
+  document.addEventListener("input", (e) => {
+    const b = e.target.getAttribute && e.target.getAttribute("data-bind");
+    if (b) { setPath(S, b, e.target.value); saveSoon(); }
+  });
+  document.addEventListener("change", (e) => {
+    const f = e.target.getAttribute && e.target.getAttribute("data-filter");
+    if (!f) return;
+    S.filters[f] = e.target.value;
+    const id = e.target.id;
+    rerender();
+    const el = document.getElementById(id);
+    if (el) el.focus();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && e.target.id === "tutor-q") { e.preventDefault(); if (!T.busy) ACT.ask(); }
+  });
+  window.addEventListener("hashchange", () => {
+    const h = (location.hash || "").replace(/^#/, "");
+    if (VIEWS.indexOf(h) >= 0 && h !== current) { current = h; render(); window.scrollTo(0, 0); }
+  });
+  let rz = null;
+  window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { if (current === "analytics") drawActive(); }, 150); });
+
+  /* The 15-minute clock runs only while the learner is on a learning step. */
+  setInterval(() => {
+    if (document.hidden || S.sim.done) return;
+    if (current === "diagnostic" ? S.diag.done : current === "learn" ? S.learn.done : current !== "simulation") return;
+    S.elapsed += 1;
+    const c = document.getElementById("clock");
+    if (c) c.textContent = fmt(S.elapsed) + " / 15:00";
+    if (S.elapsed % 5 === 0) save();
+  }, 1000);
+
+  const h0 = (location.hash || "").replace(/^#/, "");
+  if (VIEWS.indexOf(h0) >= 0) current = h0;
+  render();
+})();
+
+</script>
+
+</body>
+</html>
